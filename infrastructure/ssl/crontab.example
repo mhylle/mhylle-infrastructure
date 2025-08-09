@@ -1,0 +1,14 @@
+# Crontab configuration for SSL certificate renewal
+# Add this to root's crontab using: sudo crontab -e
+
+# Run SSL certificate renewal check twice daily
+0 2,14 * * * /home/mhylle/projects/mhylle.com/scripts/renew-ssl.sh >> /var/log/ssl-renewal.log 2>&1
+
+# Generate monthly OCSP stapling file
+0 3 1 * * openssl ocsp -no_nonce -respout /tmp/ocsp_response -issuer /etc/letsencrypt/live/mhylle.com/chain.pem -cert /etc/letsencrypt/live/mhylle.com/cert.pem -url http://ocsp.int-x3.letsencrypt.org -header Host ocsp.int-x3.letsencrypt.org
+
+# Backup certificates weekly
+0 1 * * 0 cp -r /etc/letsencrypt/live/mhylle.com /home/mhylle/infrastructure/ssl/backup/weekly_$(date +\%Y\%m\%d)
+
+# Clean up old certificate backups (keep last 8 weeks)
+0 1 * * 0 find /home/mhylle/infrastructure/ssl/backup -name "weekly_*" -type d -mtime +56 -exec rm -rf {} \;

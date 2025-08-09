@@ -1,0 +1,54 @@
+# Environment files
+.env
+.env.local
+.env.production
+
+# Logs
+logs/*.log
+logs/**/*.log
+*.log
+
+# SSL certificates (keep structure, ignore actual certs)
+infrastructure/ssl/*.pem
+infrastructure/ssl/*.key
+infrastructure/ssl/*.crt
+!infrastructure/ssl/.gitkeep
+
+# Docker volumes
+volumes/
+data/
+
+# Backup files
+*.backup
+*.bak
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+temp/
+
+# Node modules (if any)
+node_modules/
+
+# Application specific ignores
+example-app1/
+example-app2/
+
+# Keep only infrastructure and documentation
+!docs/
+!scripts/
+!infrastructure/
+!docker-compose.yml
+!README.md
+!IMPLEMENTATION_SUMMARY.md
+!.env.example
