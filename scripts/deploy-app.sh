@@ -21,6 +21,22 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+# Function to get the correct health check URL for each app
+get_health_check_url() {
+    local app_name="$1"
+    case "$app_name" in
+        app1)
+            echo "http://localhost:3000/health"
+            ;;
+        app2)
+            echo "http://localhost:3000/api/app2/health"
+            ;;
+        *)
+            echo "http://localhost:3000/health"
+            ;;
+    esac
+}
+
 # Logging functions
 log() { echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"; }
 error() { echo -e "${RED}[ERROR] $1${NC}" >&2; }
@@ -153,6 +169,9 @@ start_new_containers() {
     local db_password_var="DB_PASSWORD_${APP_NAME^^}"
     local db_password="${!db_password_var}"
     
+    # Get the correct health check URL for this app
+    local health_check_url=$(get_health_check_url "$APP_NAME")
+    
     # Start backend container
     docker run -d \
         --name "${APP_NAME}-backend" \
@@ -165,7 +184,7 @@ start_new_containers() {
         -e DB_USER="$db_user" \
         -e DB_PASSWORD="$db_password" \
         -e API_PREFIX="/api/$APP_NAME" \
-        --health-cmd="curl -f http://localhost:3000/health || exit 1" \
+        --health-cmd="curl -f $health_check_url || exit 1" \
         --health-interval=30s \
         --health-timeout=10s \
         --health-retries=3 \
@@ -208,6 +227,10 @@ update_nginx_config() {
     log "Updating Nginx configuration for $APP_NAME..."
     
     local config_file="$INFRA_DIR/nginx/apps/${APP_NAME}.conf"
+    
+    # Get the health endpoint path for nginx
+    local health_check_url=$(get_health_check_url "$APP_NAME")
+    local health_path=$(echo "$health_check_url" | sed 's|http://localhost:3000||')
     
     # Generate nginx config from template
     cat > "$config_file" << EOF
@@ -326,7 +349,7 @@ server {
     # Health check
     location /health/$APP_NAME {
         access_log off;
-        proxy_pass http://${APP_NAME}_backend/health;
+        proxy_pass http://${APP_NAME}_backend${health_path};
         proxy_set_header Host \$host;
         proxy_connect_timeout 5s;
         proxy_read_timeout 5s;
