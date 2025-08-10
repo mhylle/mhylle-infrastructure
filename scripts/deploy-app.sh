@@ -201,15 +201,30 @@ start_new_containers() {
     log "Waiting for backend to be healthy..."
     local attempts=0
     while [[ $attempts -lt 30 ]]; do
-        if docker inspect --format='{{.State.Health.Status}}' "${APP_NAME}-backend" | grep -q "healthy"; then
+        local health_status=$(docker inspect --format='{{.State.Health.Status}}' "${APP_NAME}-backend" 2>/dev/null || echo "unknown")
+        
+        if [[ "$health_status" == "healthy" ]]; then
+            log "✅ Backend is healthy!"
             break
+        elif [[ "$health_status" == "unhealthy" ]]; then
+            warning "Backend health check failed, checking logs..."
+            docker logs "${APP_NAME}-backend" --tail 10 2>/dev/null || true
         fi
+        
+        info "Backend health status: $health_status (attempt $((attempts + 1))/30)"
         sleep 2
         ((attempts++))
     done
     
     if [[ $attempts -eq 30 ]]; then
-        warning "Backend health check timeout, continuing anyway"
+        warning "Backend health check timeout after 60 seconds"
+        # Check if the container is at least running
+        if docker ps --format "table {{.Names}}" | grep -q "^${APP_NAME}-backend$"; then
+            warning "Backend container is running but health check failed. Continuing with deployment..."
+        else
+            error "Backend container is not running. Deployment failed."
+            return 1
+        fi
     fi
     
     # Start frontend container
