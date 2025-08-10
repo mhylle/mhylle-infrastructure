@@ -154,9 +154,15 @@ stop_existing_containers() {
         if docker ps -q -f name="$container" | grep -q .; then
             log "Stopping container: $container"
             docker stop "$container" || true
+        fi
+        if docker ps -aq -f name="$container" | grep -q .; then
+            log "Removing container: $container"
             docker rm "$container" || true
         fi
     done
+    
+    # Wait a moment for cleanup to complete
+    sleep 2
 }
 
 # Start new containers
