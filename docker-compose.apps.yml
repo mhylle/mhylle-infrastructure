@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  app1-frontend:
+    image: ${APP1_FRONTEND_IMAGE}:${APP1_VERSION}
+    container_name: app1-frontend
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - mhylle_app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    profiles:
+      - app1
+
+  app1-backend:
+    image: ${APP1_BACKEND_IMAGE}:${APP1_VERSION}
+    container_name: app1-backend
+    restart: unless-stopped
+    ports:
+      - "8001:3000"
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=mhylle-postgres
+      - DB_PORT=5432
+      - DB_NAME=${APP1_DB_NAME:-mhylle_app1}
+      - DB_USER=${APP1_DB_USER:-app1_user}
+      - DB_PASSWORD=${APP1_DB_PASSWORD}
+      - API_PREFIX=/api/app1
+    networks:
+      - mhylle_app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    profiles:
+      - app1
+
+  app2-frontend:
+    image: ${APP2_FRONTEND_IMAGE}:${APP2_VERSION}
+    container_name: app2-frontend
+    restart: unless-stopped
+    ports:
+      - "3002:80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - mhylle_app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    profiles:
+      - app2
+
+  app2-backend:
+    image: ${APP2_BACKEND_IMAGE}:${APP2_VERSION}
+    container_name: app2-backend
+    restart: unless-stopped
+    ports:
+      - "8002:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - POSTGRES_HOST=mhylle-postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=app2_db
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - JWT_SECRET=${APP2_JWT_SECRET:-default_jwt_secret_app2}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-7d}
+    networks:
+      - mhylle_app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/app2/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    profiles:
+      - app2
+
+networks:
+  mhylle_app-network:
+    external: true
