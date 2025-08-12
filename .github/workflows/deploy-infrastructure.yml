@@ -1,0 +1,46 @@
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'infrastructure/**'
+  workflow_dispatch:
+
+jobs:
+  deploy-infrastructure:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy nginx configuration
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          # Create infrastructure directory if it doesn't exist
+          mkdir -p /opt/mhylle/infrastructure/nginx/conf.d
+          
+          # Download the latest nginx configuration
+          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3.raw" \
+            -o /tmp/apps.conf \
+            "https://api.github.com/repos/mhylle/mhylle-infrastructure/contents/infrastructure/nginx/conf.d/apps.conf"
+          
+          # Copy to nginx container
+          docker cp /tmp/apps.conf mhylle-nginx:/etc/nginx/conf.d/apps.conf
+          
+          # Test nginx configuration
+          docker exec mhylle-nginx nginx -t
+          
+          # Reload nginx
+          docker exec mhylle-nginx nginx -s reload
+          
+          # Cleanup
+          rm /tmp/apps.conf
+          
+          echo "Infrastructure deployment completed successfully"
