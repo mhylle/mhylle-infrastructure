@@ -1,0 +1,79 @@
+name: Manual Server Cleanup
+
+on:
+  workflow_dispatch:
+    inputs:
+      cleanup_type:
+        description: 'Type of cleanup to perform'
+        required: true
+        default: 'docker'
+        type: choice
+        options:
+        - docker
+        - logs
+        - all
+
+env:
+  SERVER_HOST: ${{ secrets.SERVER_HOST }}
+  SERVER_USER: ${{ secrets.SERVER_USER }}
+  SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    name: Server Cleanup
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Perform Docker Cleanup
+        if: ${{ github.event.inputs.cleanup_type == 'docker' || github.event.inputs.cleanup_type == 'all' }}
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ env.SERVER_SSH_KEY }}
+          script: |
+            set -e
+            echo "🧹 Starting Docker cleanup..."
+            
+            # Navigate to infrastructure directory
+            cd /home/mhylle/projects/mhylle.com
+            
+            # Run the cleanup script
+            ./scripts/cleanup-docker.sh
+            
+            echo "✅ Docker cleanup completed!"
+            
+      - name: Perform Log Cleanup
+        if: ${{ github.event.inputs.cleanup_type == 'logs' || github.event.inputs.cleanup_type == 'all' }}
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ env.SERVER_SSH_KEY }}
+          script: |
+            set -e
+            echo "🧹 Starting log cleanup..."
+            
+            # Clean Docker logs older than 7 days
+            sudo find /var/lib/docker/containers/ -name "*.log" -mtime +7 -delete 2>/dev/null || echo "No old logs to clean"
+            
+            # Clean system logs
+            sudo journalctl --vacuum-time=7d
+            
+            echo "✅ Log cleanup completed!"
+            
+      - name: Show disk usage
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ env.SERVER_SSH_KEY }}
+          script: |
+            echo "📊 Current disk usage:"
+            df -h
+            echo ""
+            echo "🐳 Docker system info:"
+            docker system df
