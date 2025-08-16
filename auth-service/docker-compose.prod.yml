@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  auth-service:
+    image: ghcr.io/mhylle/auth-service:latest
+    container_name: mhylle-auth-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      # Database
+      DB_HOST: mhylle-postgres
+      DB_PORT: 5432
+      DB_NAME: auth_db
+      DB_USER: ${AUTH_DB_USER}
+      DB_PASSWORD: ${AUTH_DB_PASSWORD}
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 24h
+      # Security
+      BCRYPT_ROUNDS: 12
+      RATE_LIMIT_TTL: 60000
+      RATE_LIMIT_LIMIT: 5
+      # CORS
+      CORS_ORIGIN: https://mhylle.com,https://*.mhylle.com
+      # Cookies
+      COOKIE_DOMAIN: .mhylle.com
+      COOKIE_SECURE: 'true'
+      COOKIE_SAME_SITE: strict
+      COOKIE_MAX_AGE: 86400000
+    networks:
+      - mhylle_app-network
+    labels:
+      - "com.mhylle.service=auth"
+      - "com.mhylle.description=Authentication Service"
+      - "com.mhylle.version=1.0.0"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/auth/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"]
+      interval: 30s
+      timeout: 3s
+      start-period: 40s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  mhylle_app-network:
+    external: true

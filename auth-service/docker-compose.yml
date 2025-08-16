@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database for local development
+  postgres:
+    image: postgres:15-alpine
+    container_name: auth-postgres
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_password
+    ports:
+      - "5433:5432"  # Use different port to avoid conflicts
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - auth-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_user -d auth_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Auth service
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: auth-service
+    environment:
+      NODE_ENV: development
+      # Database
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: auth_db
+      DB_USER: auth_user
+      DB_PASSWORD: auth_password
+      # JWT
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      JWT_EXPIRES_IN: 24h
+      # Security
+      BCRYPT_ROUNDS: 12
+      RATE_LIMIT_TTL: 60000
+      RATE_LIMIT_LIMIT: 5
+      # CORS
+      CORS_ORIGIN: http://localhost:4200,http://localhost:4201,http://localhost:8080
+    ports:
+      - "3003:3000"  # Map to 3003 to avoid conflicts
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - auth-network
+    volumes:
+      - ./src:/app/src  # For hot reload in development
+      - ./docs:/app/docs
+    command: npm run start:dev
+
+  # Nginx for local testing (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: auth-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - auth-service
+    networks:
+      - auth-network
+
+volumes:
+  postgres_data:
+
+networks:
+  auth-network:
+    driver: bridge
