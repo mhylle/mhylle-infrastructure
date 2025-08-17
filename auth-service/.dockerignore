@@ -48,8 +48,10 @@ docker-compose*.yml
 .eslintrc.js
 .prettierrc
 jest.config.js
-tsconfig.json
-tsconfig.build.json
+# Note: TypeScript and NestJS config files are needed for the build
+# tsconfig.json
+# tsconfig.build.json
+# nest-cli.json
 
 # Logs
 logs
