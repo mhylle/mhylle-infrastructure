@@ -4,6 +4,8 @@ A centralized authentication and authorization service for the multi-application
 
 ## Quick Start
 
+<!-- Deployment trigger: Integration testing - 2025-08-17 -->
+
 ```bash
 # Install dependencies
 npm install
