@@ -32,11 +32,15 @@ BEGIN
     -- Create database
     IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'auth_db') THEN
         CREATE DATABASE auth_db;
+        RAISE NOTICE 'Created auth_db database';
     END IF;
     
     -- Create user
     IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'auth_user') THEN
         CREATE USER auth_user WITH PASSWORD 'auth_secure_password_change_me';
+        RAISE NOTICE 'Created auth_user with default password';
+        RAISE NOTICE 'IMPORTANT: Add AUTH_DB_PASSWORD=auth_secure_password_change_me to .env file';
+        RAISE NOTICE 'IMPORTANT: Add JWT_SECRET=your_jwt_secret_here to .env file';
     END IF;
     
     -- Grant privileges
