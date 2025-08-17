@@ -111,12 +111,6 @@ jobs:
             
             echo "🚀 Starting deployment of auth-service..."
             
-            # Navigate to infrastructure directory
-            cd /home/mhylle/projects/mhylle.com
-            
-            # Pull latest changes from GitHub
-            git pull origin main
-            
             # Extract image information
             AUTH_SERVICE_FULL=$(echo "${{ needs.build.outputs.image-tag }}" | head -n1)
             VERSION="${{ needs.build.outputs.version }}"
@@ -135,15 +129,9 @@ jobs:
             docker stop mhylle-auth-service 2>/dev/null || echo "No existing auth service container to stop"
             docker rm mhylle-auth-service 2>/dev/null || echo "No existing auth service container to remove"
             
-            # Check if auth service environment variables exist
-            # These should be in the infrastructure repository's .env file
-            if [ -f ".env" ]; then
-              source .env
-            fi
-            
-            # Auth service environment variables with fallbacks to GitHub Secrets
-            AUTH_DB_PASSWORD="${AUTH_DB_PASSWORD:-${{ secrets.AUTH_DB_PASSWORD }}}"
-            JWT_SECRET="${JWT_SECRET:-${{ secrets.JWT_SECRET }}}"
+            # Auth service environment variables from GitHub Secrets
+            AUTH_DB_PASSWORD="${{ secrets.AUTH_DB_PASSWORD }}"
+            JWT_SECRET="${{ secrets.JWT_SECRET }}"
             
             # Validate required environment variables
             if [ -z "$AUTH_DB_PASSWORD" ] || [ -z "$JWT_SECRET" ]; then
@@ -191,16 +179,13 @@ jobs:
             # Wait for container to be healthy
             echo "⏳ Waiting for auth service to be healthy..."
             for i in {1..30}; do
-              if docker exec mhylle-auth-service curl -f http://localhost:3000/api/auth/health > /dev/null 2>&1; then
+              if docker exec mhylle-auth-service curl -f http://localhost:3000/health > /dev/null 2>&1; then
                 echo "Auth service is healthy!"
                 break
               fi
               echo "Waiting... ($i/30)"
               sleep 2
             done
-            
-            # Run database migrations
-            docker exec mhylle-auth-service npm run migration:run || true
             
             # Verify deployment
             curl -f https://mhylle.com/api/auth/health || exit 1
