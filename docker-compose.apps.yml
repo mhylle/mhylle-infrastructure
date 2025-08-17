@@ -91,6 +91,40 @@ services:
     profiles:
       - app2
 
+  # Authentication Service
+  auth-service:
+    image: ${AUTH_SERVICE_IMAGE}:${AUTH_SERVICE_VERSION}
+    container_name: mhylle-auth-service
+    restart: unless-stopped
+    ports:
+      - "3003:3000"
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=mhylle-postgres
+      - DB_PORT=5432
+      - DB_NAME=auth_db
+      - DB_USER=auth_user
+      - DB_PASSWORD=${AUTH_DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=24h
+      - BCRYPT_ROUNDS=12
+      - RATE_LIMIT_TTL=60000
+      - RATE_LIMIT_LIMIT=5
+      - CORS_ORIGIN=https://mhylle.com,https://*.mhylle.com
+      - COOKIE_DOMAIN=.mhylle.com
+      - COOKIE_SECURE=true
+      - COOKIE_SAME_SITE=strict
+    networks:
+      - mhylle_app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    profiles:
+      - auth
+
 networks:
   mhylle_app-network:
     external: true
