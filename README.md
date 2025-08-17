@@ -21,8 +21,19 @@ sudo ./scripts/setup.sh
 ./scripts/health-check.sh
 ```
 
+## 🏗️ Repository Architecture
+
+This infrastructure supports a **multi-repository architecture** with separate deployments:
+
+- **mhylle-infrastructure** (this repo): Core infrastructure, auth service, nginx, PostgreSQL
+- **mhylle-app1**: Example application 1 (independent deployment)  
+- **mhylle-app2**: Example application 2 (independent deployment)
+
+Each application repository can be deployed independently without affecting others.
+
 ## 📋 Table of Contents
 
+- [Repository Architecture](#repository-architecture)
 - [Overview](#overview)
 - [Features](#features)
 - [System Requirements](#system-requirements)

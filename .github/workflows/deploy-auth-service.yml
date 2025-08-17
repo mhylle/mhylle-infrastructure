@@ -135,8 +135,29 @@ jobs:
             docker stop mhylle-auth-service 2>/dev/null || echo "No existing auth service container to stop"
             docker rm mhylle-auth-service 2>/dev/null || echo "No existing auth service container to remove"
             
-            # Source environment variables (with defaults)
-            source .env || echo "Warning: .env file not found, using defaults"
+            # Check if auth service environment variables exist
+            # These should be in the infrastructure repository's .env file
+            if [ -f ".env" ]; then
+              source .env
+            fi
+            
+            # Auth service environment variables with fallbacks to GitHub Secrets
+            AUTH_DB_PASSWORD="${AUTH_DB_PASSWORD:-${{ secrets.AUTH_DB_PASSWORD }}}"
+            JWT_SECRET="${JWT_SECRET:-${{ secrets.JWT_SECRET }}}"
+            
+            # Validate required environment variables
+            if [ -z "$AUTH_DB_PASSWORD" ] || [ -z "$JWT_SECRET" ]; then
+              echo "❌ ERROR: Missing required environment variables for auth service"
+              echo "AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD:+SET}"
+              echo "JWT_SECRET: ${JWT_SECRET:+SET}"
+              echo ""
+              echo "Please set these variables either:"
+              echo "1. In infrastructure .env file, OR"
+              echo "2. As GitHub Secrets (AUTH_DB_PASSWORD, JWT_SECRET)"
+              echo ""
+              echo "See auth-service/SETUP.md for detailed instructions"
+              exit 1
+            fi
             
             # Start auth service with direct Docker
             echo "🚀 Starting auth service..."
@@ -150,8 +171,8 @@ jobs:
               -e DB_PORT=5432 \
               -e DB_NAME=auth_db \
               -e DB_USER=auth_user \
-              -e DB_PASSWORD="${AUTH_DB_PASSWORD:-auth_secure_password_change_me}" \
-              -e JWT_SECRET="${JWT_SECRET:-default_jwt_secret_change_me}" \
+              -e DB_PASSWORD="$AUTH_DB_PASSWORD" \
+              -e JWT_SECRET="$JWT_SECRET" \
               -e JWT_EXPIRES_IN=24h \
               -e BCRYPT_ROUNDS=12 \
               -e RATE_LIMIT_TTL=60000 \
