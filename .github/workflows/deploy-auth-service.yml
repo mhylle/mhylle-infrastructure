@@ -168,33 +168,35 @@ jobs:
               -e BCRYPT_ROUNDS=12 \
               -e RATE_LIMIT_TTL=60000 \
               -e RATE_LIMIT_LIMIT=5 \
-              -e CORS_ORIGIN="http://mhylle.com,http://*.mhylle.com,http://51.159.168.239" \
+              -e CORS_ORIGIN="http://mhylle.com,http://51.159.168.239" \
               -e COOKIE_DOMAIN=".mhylle.com" \
               -e COOKIE_SECURE=false \
               -e COOKIE_SAME_SITE=strict \
-              --health-cmd="curl -f http://localhost:3000/health || exit 1" \
-              --health-interval=30s \
-              --health-timeout=10s \
-              --health-retries=3 \
-              --health-start-period=40s \
               "$AUTH_SERVICE_FULL"
             
-            # Wait for container to be healthy
+            # Wait for container to be healthy (using Docker health status)
             echo "⏳ Waiting for auth service to be healthy..."
             for i in {1..30}; do
-              if docker exec mhylle-auth-service curl -f http://localhost:3000/health > /dev/null 2>&1; then
+              health_status=$(docker inspect --format='{{.State.Health.Status}}' mhylle-auth-service 2>/dev/null || echo "none")
+              if [ "$health_status" = "healthy" ]; then
                 echo "✅ Auth service is healthy!"
                 break
+              elif [ "$health_status" = "unhealthy" ]; then
+                echo "❌ Auth service is unhealthy"
+                echo "Container logs:"
+                docker logs mhylle-auth-service --tail 20
+                exit 1
               fi
-              echo "Waiting... ($i/30)"
+              echo "Waiting... ($i/30) - Status: $health_status"
               sleep 2
             done
             
             # Final health check verification
-            if ! docker exec mhylle-auth-service curl -f http://localhost:3000/health > /dev/null 2>&1; then
-              echo "❌ Auth service failed health check after 60 seconds"
+            final_health_status=$(docker inspect --format='{{.State.Health.Status}}' mhylle-auth-service 2>/dev/null || echo "none")
+            if [ "$final_health_status" != "healthy" ]; then
+              echo "❌ Auth service failed to become healthy (status: $final_health_status)"
               echo "Container logs:"
-              docker logs mhylle-auth-service --tail 20
+              docker logs mhylle-auth-service --tail 30
               exit 1
             fi
             
