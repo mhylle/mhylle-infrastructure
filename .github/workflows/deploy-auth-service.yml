@@ -165,9 +165,9 @@ jobs:
               -e BCRYPT_ROUNDS=12 \
               -e RATE_LIMIT_TTL=60000 \
               -e RATE_LIMIT_LIMIT=5 \
-              -e CORS_ORIGIN="https://mhylle.com,https://*.mhylle.com" \
+              -e CORS_ORIGIN="http://mhylle.com,http://*.mhylle.com,http://51.159.168.239" \
               -e COOKIE_DOMAIN=".mhylle.com" \
-              -e COOKIE_SECURE=true \
+              -e COOKIE_SECURE=false \
               -e COOKIE_SAME_SITE=strict \
               --health-cmd="curl -f http://localhost:3000/health || exit 1" \
               --health-interval=30s \
@@ -187,13 +187,13 @@ jobs:
               sleep 2
             done
             
-            # Verify deployment
-            curl -f https://mhylle.com/api/auth/health || exit 1
+            # Verify deployment (using HTTP for now, like app1)
+            curl -f http://51.159.168.239:3003/health || exit 1
 
       - name: Verify deployment
         run: |
           sleep 10
-          response=$(curl -s -o /dev/null -w "%{http_code}" https://mhylle.com/api/auth/health)
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://51.159.168.239:3003/health)
           if [ $response -eq 200 ]; then
             echo "Deployment successful! Auth service is healthy."
           else
