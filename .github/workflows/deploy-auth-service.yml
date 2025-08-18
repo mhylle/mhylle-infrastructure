@@ -27,7 +27,7 @@ jobs:
 
     - name: Validate Dockerfile syntax
       run: |
-        docker build --no-cache -f auth-service/Dockerfile -t test-auth-service . || echo "Auth service Dockerfile needs adjustment"
+        docker build --no-cache -f auth-service/Dockerfile -t test-auth-service auth-service || echo "Auth service Dockerfile needs adjustment"
 
     - name: Configuration check
       run: |
