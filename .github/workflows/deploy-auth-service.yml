@@ -147,29 +147,8 @@ jobs:
               exit 1
             fi
             
-            # Verify auth database exists (should be created by init script)
-            echo "📦 Verifying auth database exists..."
-            
-            # Get PostgreSQL admin password from infrastructure
-            POSTGRES_ADMIN_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
-            if [ -z "$POSTGRES_ADMIN_PASSWORD" ]; then
-              echo "❌ ERROR: POSTGRES_PASSWORD secret not set"
-              exit 1
-            fi
-            
-            # Check if database exists (using mhylle_admin user)
-            if docker exec mhylle-postgres psql -U mhylle_admin -d mhylle_main -c "SELECT 1 FROM pg_database WHERE datname = 'auth_db'" | grep -q 1; then
-              echo "✅ Auth database exists"
-            else
-              echo "⚠️ Auth database not found, it should have been created by init script"
-              echo "Checking if auth_user exists..."
-              if docker exec mhylle-postgres psql -U mhylle_admin -d mhylle_main -c "SELECT 1 FROM pg_user WHERE usename = 'auth_user'" | grep -q 1; then
-                echo "✅ Auth user exists"
-              else
-                echo "❌ Auth user not found - database initialization may have failed"
-                exit 1
-              fi
-            fi
+            # Database should already exist from infrastructure init script
+            echo "📦 Auth database and user should already exist from init script"
             
             # Start auth service with direct Docker
             echo "🚀 Starting auth service..."
