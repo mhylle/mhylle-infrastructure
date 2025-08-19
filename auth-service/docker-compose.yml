@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: auth_user
       POSTGRES_PASSWORD: auth_password
     ports:
-      - "5433:5432"  # Use different port to avoid conflicts
+      - "5435:5432"  # Use different port to avoid conflicts
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
@@ -52,10 +52,11 @@ services:
         condition: service_healthy
     networks:
       - auth-network
-    volumes:
-      - ./src:/app/src  # For hot reload in development
-      - ./docs:/app/docs
-    command: npm run start:dev
+    # Remove volumes for production testing
+    # volumes:
+    #   - ./src:/app/src  # For hot reload in development
+    #   - ./docs:/app/docs
+    # Use production command from Dockerfile
 
   # Nginx for local testing (optional)
   nginx:

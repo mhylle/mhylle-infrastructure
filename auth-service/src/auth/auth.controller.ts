@@ -10,12 +10,16 @@ import {
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
+import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post('login')
   async login(
@@ -64,6 +68,9 @@ export class AuthController {
       throw new UnauthorizedException('Invalid token');
     }
 
+    // Get user permissions
+    const permissions = await this.usersService.getUserPermissions(user.id);
+
     return {
       success: true,
       data: {
@@ -71,10 +78,7 @@ export class AuthController {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        permissions: {
-          apps: user.apps,
-          roles: user.roles,
-        },
+        permissions,
       },
     };
   }

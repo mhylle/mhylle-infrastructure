@@ -52,4 +52,24 @@ export class UsersService {
   async validatePassword(password: string, hashedPassword: string): Promise<boolean> {
     return bcrypt.compare(password, hashedPassword);
   }
+
+  async getUserPermissions(userId: string): Promise<{ apps: string[], roles: Record<string, string[]> }> {
+    // Query the user_app_roles table to get permissions
+    const permissionRows = await this.userRepository.query(
+      'SELECT app_id, role FROM user_app_roles WHERE user_id = $1',
+      [userId]
+    );
+
+    const apps: string[] = Array.from(new Set(permissionRows.map((row: any) => row.app_id as string)));
+    const roles: Record<string, string[]> = {};
+    
+    for (const row of permissionRows) {
+      if (!roles[row.app_id]) {
+        roles[row.app_id] = [];
+      }
+      roles[row.app_id].push(row.role);
+    }
+
+    return { apps, roles };
+  }
 }

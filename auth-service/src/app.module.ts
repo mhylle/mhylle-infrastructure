@@ -22,7 +22,7 @@ import { User } from './users/entities/user.entity';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME', 'auth_db'),
         entities: [User],
-        synchronize: configService.get('NODE_ENV') !== 'production',
+        synchronize: false, // Database is already set up by init script
         logging: configService.get('NODE_ENV') === 'development',
       }),
       inject: [ConfigService],

@@ -8,27 +8,21 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ name: 'first_name', nullable: true })
   firstName: string;
 
-  @Column()
+  @Column({ name: 'last_name', nullable: true })
   lastName: string;
 
-  @Column()
+  @Column({ name: 'password_hash' })
   password: string;
 
-  @Column({ default: true })
+  @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
-  @Column('simple-array', { default: '' })
-  apps: string[];
-
-  @Column('simple-json', { default: '{}' })
-  roles: Record<string, string[]>;
-
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

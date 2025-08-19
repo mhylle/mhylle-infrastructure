@@ -54,13 +54,16 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Get user permissions from database
+    const permissions = await this.usersService.getUserPermissions(user.id);
+
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      apps: user.apps,
-      roles: user.roles,
+      apps: permissions.apps,
+      roles: permissions.roles,
     };
 
     const access_token = this.jwtService.sign(payload);
@@ -71,10 +74,7 @@ export class AuthService {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        permissions: {
-          apps: user.apps,
-          roles: user.roles,
-        },
+        permissions,
       },
       access_token,
     };
