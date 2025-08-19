@@ -1,0 +1,1 @@
+{"success":true,"data":{"id":"5d01793c-979d-4591-a475-9bbaafcd7514","email":"admin@mhylle.com","firstName":"Admin","lastName":"User","permissions":{"apps":["app1","app2"],"roles":{"app1":["admin"],"app2":["admin"]}}}}

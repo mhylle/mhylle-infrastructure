@@ -204,7 +204,7 @@ GRANT SELECT ON user_permissions TO auth_user;
 INSERT INTO users (email, password_hash, first_name, last_name, is_active)
 VALUES (
     'admin@mhylle.com',
-    '$2b$12$vMK6/aL.T7lqsQOJEhX3ZOXvYkpg8CmY7YxPfbRkfQCrJBPHEk8GW', -- bcrypt hash for 'Admin123!'
+    '$2b$12$vtr7sPLsJhKQSKTXBNvQoeUaz84XvcGqhLffD2gaXIqLC8kQNxZUG', -- bcrypt hash for 'Admin123!'
     'System',
     'Administrator',
     true
