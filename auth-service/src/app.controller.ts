@@ -16,6 +16,7 @@ export class AppController {
       status: 'ok',
       timestamp: new Date().toISOString(),
       service: 'auth-service',
+      version: '1.0.0',
     };
   }
 }
