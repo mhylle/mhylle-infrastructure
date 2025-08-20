@@ -209,12 +209,8 @@ jobs:
               
               -- Create update trigger
               CREATE OR REPLACE FUNCTION update_updated_at_column()
-              RETURNS TRIGGER AS \\\$func\\\$
-              BEGIN
-                NEW.updated_at = NOW();
-                RETURN NEW;
-              END;
-              \\\$func\\\$ LANGUAGE plpgsql;
+              RETURNS TRIGGER AS 'BEGIN NEW.updated_at = NOW(); RETURN NEW; END;'
+              LANGUAGE plpgsql;
               
               DROP TRIGGER IF EXISTS update_users_updated_at ON users;
               CREATE TRIGGER update_users_updated_at
