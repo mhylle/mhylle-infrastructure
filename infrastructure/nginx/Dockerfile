@@ -2,6 +2,7 @@ FROM nginx:alpine
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
+COPY ssl.conf /etc/nginx/ssl.conf
 COPY apps/ /etc/nginx/conf.d/
 
 # Create log directory
