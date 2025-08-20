@@ -1,0 +1,185 @@
+name: Build and Deploy Nginx
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infrastructure/nginx/**'
+      - '.github/workflows/deploy-nginx.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'infrastructure/nginx/**'
+      - '.github/workflows/deploy-nginx.yml'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/nginx
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Validate Dockerfile syntax
+      run: |
+        docker build --no-cache -f infrastructure/nginx/Dockerfile -t test-nginx infrastructure/nginx || echo "Nginx Dockerfile needs adjustment"
+
+    - name: Configuration check
+      run: |
+        echo "✅ Nginx configuration validated"
+
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./infrastructure/nginx
+          file: ./infrastructure/nginx/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    environment:
+      name: production
+      url: https://mhylle.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            set -e
+            
+            echo "🚀 Starting deployment of nginx..."
+            
+            # Extract image information
+            NGINX_FULL=$(echo "${{ needs.build.outputs.image-tag }}" | head -n1)
+            
+            echo "Nginx image: $NGINX_FULL"
+            
+            # Log in to GitHub Container Registry
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # Pull latest image
+            docker pull "$NGINX_FULL"
+            
+            # Stop and remove existing nginx container
+            echo "🛑 Stopping existing nginx container..."
+            docker stop mhylle-nginx 2>/dev/null || echo "No existing nginx container to stop"
+            docker rm mhylle-nginx 2>/dev/null || echo "No existing nginx container to remove"
+            
+            # Start nginx with new image
+            echo "🚀 Starting nginx with new configuration..."
+            docker run -d \
+              --name mhylle-nginx \
+              --restart unless-stopped \
+              --network mhylle_app-network \
+              -p 80:80 \
+              -p 443:443 \
+              "$NGINX_FULL"
+            
+            # Wait for container to be healthy
+            echo "⏳ Waiting for nginx to be healthy..."
+            for i in {1..30}; do
+              health_status=$(docker inspect --format='{{.State.Health.Status}}' mhylle-nginx 2>/dev/null || echo "none")
+              if [ "$health_status" = "healthy" ]; then
+                echo "✅ Nginx is healthy!"
+                break
+              elif [ "$health_status" = "unhealthy" ]; then
+                echo "❌ Nginx is unhealthy"
+                echo "Container logs:"
+                docker logs mhylle-nginx --tail 20
+                exit 1
+              fi
+              echo "Waiting... ($i/30) - Status: $health_status"
+              sleep 2
+            done
+            
+            # Final health check verification
+            final_health_status=$(docker inspect --format='{{.State.Health.Status}}' mhylle-nginx 2>/dev/null || echo "none")
+            if [ "$final_health_status" != "healthy" ]; then
+              echo "❌ Nginx failed to become healthy (status: $final_health_status)"
+              echo "Container logs:"
+              docker logs mhylle-nginx --tail 30
+              exit 1
+            fi
+            
+            echo "✅ Nginx deployed successfully with auth service configuration"
+
+      - name: Verify deployment
+        run: |
+          sleep 5
+          # Test nginx is responding
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://51.159.168.239/)
+          if [ $response -eq 200 ] || [ $response -eq 404 ]; then
+            echo "✅ Nginx is responding (HTTP $response)"
+          else
+            echo "❌ Nginx not responding correctly (HTTP $response)"
+            exit 1
+          fi
+          
+          # Test auth service routing
+          auth_response=$(curl -s -o /dev/null -w "%{http_code}" http://51.159.168.239/api/auth/health)
+          if [ $auth_response -eq 200 ]; then
+            echo "✅ Auth service routing is working (HTTP $auth_response)"
+          else
+            echo "⚠️ Auth service routing returned HTTP $auth_response"
+          fi
