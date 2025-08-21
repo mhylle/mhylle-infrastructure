@@ -90,7 +90,7 @@ CREATE TRIGGER update_users_updated_at
 INSERT INTO users (email, password_hash, first_name, last_name, is_active)
 VALUES (
     'admin@mhylle.com',
-    '$2b$12$Lx3YfgA7M5iXXXXXXXXXXX', -- Replace with actual bcrypt hash
+    '$2b$12$mfsurxfGGqVfaE4GECOuVe7XnHECBteX3hrrfNxfFo8XtKQh5utPC',
     'Admin',
     'User',
     true

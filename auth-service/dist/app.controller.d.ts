@@ -7,5 +7,6 @@ export declare class AppController {
         status: string;
         timestamp: string;
         service: string;
+        version: string;
     };
 }
