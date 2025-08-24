@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const users_service_1 = require("../users/users.service");
 const login_dto_1 = require("./dto/login.dto");
+const register_dto_1 = require("./dto/register.dto");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
 let AuthController = class AuthController {
     authService;
@@ -24,6 +25,36 @@ let AuthController = class AuthController {
     constructor(authService, usersService) {
         this.authService = authService;
         this.usersService = usersService;
+    }
+    async register(registerDto) {
+        if (registerDto.password !== registerDto.confirmPassword) {
+            throw new common_1.BadRequestException('Passwords do not match');
+        }
+        const existingUser = await this.usersService.findByEmail(registerDto.email);
+        if (existingUser) {
+            throw new common_1.ConflictException('Email already registered');
+        }
+        const user = await this.usersService.create({
+            email: registerDto.email,
+            firstName: registerDto.firstName,
+            lastName: registerDto.lastName,
+            password: registerDto.password,
+            isActive: true,
+            apps: ['app1'],
+            roles: {
+                'app1': ['user']
+            }
+        });
+        return {
+            success: true,
+            data: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+            },
+            message: 'User registered successfully',
+        };
     }
     async login(loginDto, response) {
         const result = await this.authService.login(loginDto);
@@ -84,6 +115,13 @@ let AuthController = class AuthController {
     }
 };
 exports.AuthController = AuthController;
+__decorate([
+    (0, common_1.Post)('register'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [register_dto_1.RegisterDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "register", null);
 __decorate([
     (0, common_1.Post)('login'),
     __param(0, (0, common_1.Body)()),

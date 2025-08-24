@@ -1,0 +1,27 @@
+{
+  "name": "mhylle.com",
+  "version": "1.0.0",
+  "description": "A complete Docker-based infrastructure solution for hosting multiple independent web applications on a single server with zero-downtime deployments, automated SSL management, and comprehensive monitoring.",
+  "main": "test-console-errors.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mhylle/mhylle-infrastructure.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/mhylle/mhylle-infrastructure/issues"
+  },
+  "homepage": "https://github.com/mhylle/mhylle-infrastructure#readme",
+  "dependencies": {
+    "playwright": "^1.55.0"
+  }
+}
