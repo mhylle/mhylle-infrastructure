@@ -9,32 +9,30 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- Create application databases and users
 -- Note: Additional databases will be created by the deploy-app.sh script
 
--- Create app1 database and user (example application)
+-- Create app1 user first
 DO $$
 BEGIN
-    -- Create database
-    IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'app1_db') THEN
-        CREATE DATABASE app1_db;
-    END IF;
-    
     -- Create user
     IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'app_app1') THEN
         CREATE USER app_app1 WITH PASSWORD 'app1_secure_password_change_me';
     END IF;
-    
-    -- Grant privileges
-    GRANT ALL PRIVILEGES ON DATABASE app1_db TO app_app1;
 END $$;
 
--- Create auth database and user (authentication service)
+-- Create app1 database (must be outside function)
+SELECT 'CREATE DATABASE app1_db OWNER app_app1' 
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'app1_db')\gexec
+
+-- Grant privileges
 DO $$
 BEGIN
-    -- Create database
-    IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'auth_db') THEN
-        CREATE DATABASE auth_db;
-        RAISE NOTICE 'Created auth_db database';
+    IF EXISTS (SELECT FROM pg_database WHERE datname = 'app1_db') THEN
+        GRANT ALL PRIVILEGES ON DATABASE app1_db TO app_app1;
     END IF;
-    
+END $$;
+
+-- Create auth user first
+DO $$
+BEGIN
     -- Create user
     IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'auth_user') THEN
         CREATE USER auth_user WITH PASSWORD 'auth_secure_password_change_me';
@@ -42,9 +40,19 @@ BEGIN
         RAISE NOTICE 'IMPORTANT: Add AUTH_DB_PASSWORD=auth_secure_password_change_me to .env file';
         RAISE NOTICE 'IMPORTANT: Add JWT_SECRET=your_jwt_secret_here to .env file';
     END IF;
-    
-    -- Grant privileges
-    GRANT ALL PRIVILEGES ON DATABASE auth_db TO auth_user;
+END $$;
+
+-- Create auth database (must be outside function)
+SELECT 'CREATE DATABASE auth_db OWNER auth_user' 
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'auth_db')\gexec
+
+-- Grant privileges
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM pg_database WHERE datname = 'auth_db') THEN
+        GRANT ALL PRIVILEGES ON DATABASE auth_db TO auth_user;
+        RAISE NOTICE 'Granted privileges on auth_db to auth_user';
+    END IF;
 END $$;
 
 -- Connect to app1_db to set up schema

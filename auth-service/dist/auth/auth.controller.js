@@ -27,22 +27,28 @@ let AuthController = class AuthController {
     }
     async login(loginDto, response) {
         const result = await this.authService.login(loginDto);
-        response.cookie('auth_token', result.access_token, {
+        const cookieOptions = {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            domain: process.env.COOKIE_DOMAIN || '.mhylle.com',
             maxAge: 24 * 60 * 60 * 1000,
-        });
+        };
+        if (process.env.NODE_ENV === 'production') {
+            cookieOptions.domain = process.env.COOKIE_DOMAIN || '.mhylle.com';
+        }
+        response.cookie('auth_token', result.access_token, cookieOptions);
         return {
             success: true,
             data: result.user,
+            ...(process.env.NODE_ENV === 'development' && { access_token: result.access_token }),
         };
     }
     async logout(response) {
-        response.clearCookie('auth_token', {
-            domain: process.env.COOKIE_DOMAIN || '.mhylle.com',
-        });
+        const clearCookieOptions = {};
+        if (process.env.NODE_ENV === 'production') {
+            clearCookieOptions.domain = process.env.COOKIE_DOMAIN || '.mhylle.com';
+        }
+        response.clearCookie('auth_token', clearCookieOptions);
         return {
             success: true,
             message: 'Logged out successfully',

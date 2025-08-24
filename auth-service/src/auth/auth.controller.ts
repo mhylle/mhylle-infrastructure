@@ -29,25 +29,38 @@ export class AuthController {
     const result = await this.authService.login(loginDto);
     
     // Set HTTP-only cookie for SSO
-    response.cookie('auth_token', result.access_token, {
+    const cookieOptions: any = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      domain: process.env.COOKIE_DOMAIN || '.mhylle.com',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    });
+    };
+    
+    // Only set domain in production, not for localhost development
+    if (process.env.NODE_ENV === 'production') {
+      cookieOptions.domain = process.env.COOKIE_DOMAIN || '.mhylle.com';
+    }
+    
+    response.cookie('auth_token', result.access_token, cookieOptions);
 
     return {
       success: true,
       data: result.user,
+      // Include access_token in development for localStorage fallback
+      ...(process.env.NODE_ENV === 'development' && { access_token: result.access_token }),
     };
   }
 
   @Post('logout')
   async logout(@Res({ passthrough: true }) response: Response) {
-    response.clearCookie('auth_token', {
-      domain: process.env.COOKIE_DOMAIN || '.mhylle.com',
-    });
+    const clearCookieOptions: any = {};
+    
+    // Only set domain in production, not for localhost development
+    if (process.env.NODE_ENV === 'production') {
+      clearCookieOptions.domain = process.env.COOKIE_DOMAIN || '.mhylle.com';
+    }
+    
+    response.clearCookie('auth_token', clearCookieOptions);
 
     return {
       success: true,

@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  # Authentication Service - Development version (matches production pattern)
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile.dev
+    container_name: mhylle-auth-service
+    restart: unless-stopped
+    ports:
+      - "3013:3000"  # Different port for development to avoid conflicts
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=mhylle-postgres-dev
+      - DB_PORT=5432
+      - DB_NAME=auth_db
+      - DB_USER=auth_user
+      - DB_PASSWORD=${AUTH_DB_PASSWORD:-auth_secure_password_change_me}
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret}
+      - JWT_EXPIRES_IN=24h
+      - BCRYPT_ROUNDS=12
+      - RATE_LIMIT_TTL=60000
+      - RATE_LIMIT_LIMIT=5
+      - CORS_ORIGIN=http://localhost:8090,http://localhost:4200
+      - COOKIE_DOMAIN=localhost
+      - COOKIE_SECURE=false  # HTTP for development
+      - COOKIE_SAME_SITE=lax  # More permissive for development
+    volumes:
+      - ./auth-service/src:/app/src
+      - ./auth-service/package.json:/app/package.json
+      - ./auth-service/package-lock.json:/app/package-lock.json
+      - /app/node_modules
+    networks:
+      - mhylle_app-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/auth/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    profiles:
+      - auth
+
+  # App1 Frontend - Development
+  app1-frontend:
+    build:
+      context: ./example-app1/frontend
+      dockerfile: Dockerfile.dev
+    container_name: app1-frontend
+    restart: unless-stopped
+    ports:
+      - "3001:80"  # Same as production
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./example-app1/frontend/src:/app/src
+      - ./example-app1/frontend/package.json:/app/package.json
+      - ./example-app1/frontend/package-lock.json:/app/package-lock.json
+      - ./example-app1/frontend/angular.json:/app/angular.json
+      - /app/node_modules
+    networks:
+      - mhylle_app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    profiles:
+      - app1
+
+  # App1 Backend - Development
+  app1-backend:
+    build:
+      context: ./example-app1/backend
+      dockerfile: Dockerfile.dev
+    container_name: app1-backend
+    restart: unless-stopped
+    ports:
+      - "8001:3000"  # Same as production
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=mhylle-postgres-dev
+      - DB_PORT=5432
+      - DB_NAME=app1_db
+      - DB_USER=app_app1
+      - DB_PASSWORD=${APP1_DB_PASSWORD:-app1_secure_password_change_me}
+      - API_PREFIX=/api/app1
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret}
+    volumes:
+      - ./example-app1/backend/src:/app/src
+      - ./example-app1/backend/package.json:/app/package.json
+      - ./example-app1/backend/package-lock.json:/app/package-lock.json
+      - /app/node_modules
+    networks:
+      - mhylle_app-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    profiles:
+      - app1
+
+networks:
+  # Applications network - must match infrastructure network
+  mhylle_app-network:
+    external: true
+    name: mhyllecom_mhylle_app-network
+  
+  # Infrastructure network - to connect to postgres
+  app-network:
+    external: true
+    name: mhyllecom_app-network

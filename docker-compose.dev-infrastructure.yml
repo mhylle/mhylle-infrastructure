@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # Nginx reverse proxy - EXACT production configuration
+  nginx:
+    image: nginx:alpine
+    container_name: mhylle-nginx-dev
+    ports:
+      - "8090:80"  # Only port differs from production
+    volumes:
+      - ./infrastructure/nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro  # Dev config with EXACT production patterns
+      - ./infrastructure/nginx/conf.d.dev:/etc/nginx/conf.d:ro  # Dev routing (only app1, no app2)
+      - ./logs/nginx:/var/log/nginx
+    networks:
+      - app-network
+      - mhylle_app-network  # Connect to both networks like production
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # PostgreSQL database - shared across all applications (matches production)
+  postgres:
+    image: postgres:15-alpine
+    container_name: mhylle-postgres-dev
+    hostname: postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mhylle_main_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-mhylle_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password}
+      POSTGRES_INITDB_ARGS: "--auth-host=md5"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-databases-dev.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+      - ./logs/postgres:/var/log/postgresql
+    networks:
+      - app-network
+      - mhylle_app-network  # Also on app network for auth service connectivity
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5435:5432"  # Different port for development to avoid conflicts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mhylle_admin} -d ${POSTGRES_DB:-mhylle_main_dev}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+networks:
+  # Infrastructure network
+  app-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.100.0/24
+
+  # Applications network - external like production
+  mhylle_app-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.101.0/24
+
+volumes:
+  postgres_data:
+    driver: local

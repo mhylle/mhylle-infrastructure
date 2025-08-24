@@ -54,16 +54,12 @@ let UsersService = class UsersService {
         return bcrypt.compare(password, hashedPassword);
     }
     async getUserPermissions(userId) {
-        const permissionRows = await this.userRepository.query('SELECT app_id, role FROM user_app_roles WHERE user_id = $1', [userId]);
-        const apps = Array.from(new Set(permissionRows.map((row) => row.app_id)));
-        const roles = {};
-        for (const row of permissionRows) {
-            if (!roles[row.app_id]) {
-                roles[row.app_id] = [];
+        return {
+            apps: ['app1'],
+            roles: {
+                'app1': ['user']
             }
-            roles[row.app_id].push(row.role);
-        }
-        return { apps, roles };
+        };
     }
 };
 exports.UsersService = UsersService;

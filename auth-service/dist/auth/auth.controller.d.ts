@@ -7,6 +7,7 @@ export declare class AuthController {
     private readonly usersService;
     constructor(authService: AuthService, usersService: UsersService);
     login(loginDto: LoginDto, response: Response): Promise<{
+        access_token?: string | undefined;
         success: boolean;
         data: {
             id: string;
