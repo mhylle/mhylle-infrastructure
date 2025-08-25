@@ -30,14 +30,16 @@ async function bootstrap() {
   // Cookie parser middleware
   app.use(cookieParser());
 
-  // CORS configuration
+  // CORS configuration - Single domain architecture with subpath routing
   app.enableCors({
-    origin: [
-      'https://mhylle.com',
-      'https://*.mhylle.com',
-      configService.get('NODE_ENV') === 'development' ? 'http://localhost:4200' : '',
-      configService.get('NODE_ENV') === 'development' ? 'http://localhost:4201' : '',
-    ].filter(Boolean),
+    origin: configService.get('NODE_ENV') === 'development' 
+      ? [
+          'http://localhost:8090',  // Development nginx proxy
+          'http://localhost:4200'   // Direct Angular dev server
+        ]
+      : [
+          'http://mhylle.com'       // Production HTTP (will be HTTPS later)
+        ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
