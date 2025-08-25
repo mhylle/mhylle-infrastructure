@@ -196,3 +196,6 @@ curl https://mhylle.com/api/app1/health
 - Database connection pooling in NestJS
 - Container resource limits set
 - Health checks prevent unhealthy containers from receiving traffic
+- we have a system architecture with applications that uses a single domain - mhylle.com
+an application is workin as mhylle.com/app1 and mhylle.com/app2
+- We have 3 repositories, the infrastructuere and the ones for app1 and app2
