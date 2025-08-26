@@ -37,10 +37,10 @@ __decorate([
 ], RegisterDto.prototype, "lastName", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(8),
+    (0, class_validator_1.MinLength)(6),
     (0, class_validator_1.MaxLength)(100),
-    (0, class_validator_1.Matches)(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
-        message: 'Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character',
+    (0, class_validator_1.Matches)(/^(?=.*\d)[a-zA-Z\d]+$/, {
+        message: 'Password must be at least 6 characters and contain at least one number',
     }),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "password", void 0);

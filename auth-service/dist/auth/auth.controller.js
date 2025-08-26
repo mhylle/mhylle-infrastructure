@@ -60,9 +60,10 @@ let AuthController = class AuthController {
         const result = await this.authService.login(loginDto);
         const cookieOptions = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: false,
+            sameSite: 'lax',
             maxAge: 24 * 60 * 60 * 1000,
+            path: '/',
         };
         if (process.env.NODE_ENV === 'production') {
             cookieOptions.domain = process.env.COOKIE_DOMAIN || '.mhylle.com';
@@ -75,7 +76,12 @@ let AuthController = class AuthController {
         };
     }
     async logout(response) {
-        const clearCookieOptions = {};
+        const clearCookieOptions = {
+            httpOnly: true,
+            secure: false,
+            sameSite: 'lax',
+            path: '/',
+        };
         if (process.env.NODE_ENV === 'production') {
             clearCookieOptions.domain = process.env.COOKIE_DOMAIN || '.mhylle.com';
         }

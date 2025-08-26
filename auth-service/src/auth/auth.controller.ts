@@ -73,9 +73,10 @@ export class AuthController {
     // Set HTTP-only cookie for SSO
     const cookieOptions: any = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: false, // Set to false since we're using HTTP, not HTTPS
+      sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cross-origin requests
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      path: '/', // Ensure cookie is available for all paths
     };
     
     // Only set domain in production, not for localhost development
@@ -95,7 +96,12 @@ export class AuthController {
 
   @Post('logout')
   async logout(@Res({ passthrough: true }) response: Response) {
-    const clearCookieOptions: any = {};
+    const clearCookieOptions: any = {
+      httpOnly: true,
+      secure: false, // Match login settings
+      sameSite: 'lax', // Match login settings
+      path: '/', // Match login settings
+    };
     
     // Only set domain in production, not for localhost development
     if (process.env.NODE_ENV === 'production') {
