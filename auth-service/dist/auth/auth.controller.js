@@ -65,9 +65,6 @@ let AuthController = class AuthController {
             maxAge: 24 * 60 * 60 * 1000,
             path: '/',
         };
-        if (process.env.NODE_ENV === 'production') {
-            cookieOptions.domain = process.env.COOKIE_DOMAIN || '.mhylle.com';
-        }
         response.cookie('auth_token', result.access_token, cookieOptions);
         return {
             success: true,
@@ -82,9 +79,6 @@ let AuthController = class AuthController {
             sameSite: 'lax',
             path: '/',
         };
-        if (process.env.NODE_ENV === 'production') {
-            clearCookieOptions.domain = process.env.COOKIE_DOMAIN || '.mhylle.com';
-        }
         response.clearCookie('auth_token', clearCookieOptions);
         return {
             success: true,

@@ -79,10 +79,8 @@ export class AuthController {
       path: '/', // Ensure cookie is available for all paths
     };
     
-    // Only set domain in production, not for localhost development
-    if (process.env.NODE_ENV === 'production') {
-      cookieOptions.domain = process.env.COOKIE_DOMAIN || '.mhylle.com';
-    }
+    // Don't set domain - let the cookie work for the current domain
+    // This ensures the cookie is available to all paths on mhylle.com
     
     response.cookie('auth_token', result.access_token, cookieOptions);
 
@@ -103,10 +101,7 @@ export class AuthController {
       path: '/', // Match login settings
     };
     
-    // Only set domain in production, not for localhost development
-    if (process.env.NODE_ENV === 'production') {
-      clearCookieOptions.domain = process.env.COOKIE_DOMAIN || '.mhylle.com';
-    }
+    // Don't set domain - match login settings
     
     response.clearCookie('auth_token', clearCookieOptions);
 
