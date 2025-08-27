@@ -77,11 +77,11 @@ export class AuthController {
       sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cross-origin requests
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/', // Ensure cookie is available for all paths
-      domain: '.mhylle.com', // Set domain to allow cookies across all subpaths
+      domain: 'mhylle.com', // Single domain with subpaths /app1, /app2, etc.
     };
     
-    // Domain set to .mhylle.com ensures cookie works for app1, app2, etc.
-    // This enables proper SSO across all applications
+    // Domain set to mhylle.com (no leading dot) for subpath routing
+    // This enables SSO across /app1, /app2, etc.
     
     response.cookie('auth_token', result.access_token, cookieOptions);
 
@@ -100,7 +100,7 @@ export class AuthController {
       secure: false, // Match login settings
       sameSite: 'lax', // Match login settings
       path: '/', // Match login settings
-      domain: '.mhylle.com', // Match login settings for proper cookie clearing
+      domain: 'mhylle.com', // Match login settings for proper cookie clearing
     };
     
     // Domain must match login settings to properly clear the cookie

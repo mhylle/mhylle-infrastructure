@@ -105,12 +105,13 @@ location /api/app1/ {
 
 ### Environment Variables
 Applications use these environment variables:
-- `DB_HOST=postgres`
+- `DB_HOST=mhylle-postgres` (container name, not localhost)
 - `DB_PORT=5432`
-- `DB_USERNAME=app_user`
+- `DB_USERNAME=app_app1` (actual username from init script)
 - `DB_PASSWORD` (from secrets)
-- `DB_DATABASE=app1_db` (app-specific)
-- `API_PREFIX=/api/app1` (for routing)
+- `DB_DATABASE=app1_db` (app-specific database)
+- `AUTH_URL=http://mhylle-auth-service:3000/api/auth` (for auth service communication)
+- `NODE_ENV=production` (affects TypeORM synchronization)
 
 ## Key Files to Understand
 
@@ -150,8 +151,9 @@ When adding a new application:
 - Ensure backend health endpoint responds at `/health`
 
 ### Database Connection
-- Container must be on app-network
-- Use hostname `postgres` not localhost
+- Container must be on `mhylle_app-network`
+- Use hostname `mhylle-postgres` not localhost or postgres
+- Database user is `app_app1` not `app1_user` (verify in init script)
 - Check database exists (app1_db, app2_db)
 
 ### SSL/Certificate Issues
@@ -188,6 +190,40 @@ curl https://mhylle.com/api/app1/health
 - Security headers configured in nginx
 - Non-root containers where possible
 - Secrets managed via GitHub Secrets
+- Cookie-based authentication with HTTP-only, secure flags
+- Single domain architecture: mhylle.com with subpath routing (/app1, /app2)
+
+## Authentication Architecture
+
+**CRITICAL: Single Domain with Subpaths (NOT Subdomains)**
+- Domain: `mhylle.com` with subpaths `/app1`, `/app2`, etc.
+- **NOT using subdomains** like `app1.mhylle.com` or `app2.mhylle.com`
+- Cookie domain should be `mhylle.com` (no leading dot)
+
+The system uses a **centralized authentication service** with cookie-based SSO:
+- **Auth Service**: Standalone NestJS service handling login/registration/validation  
+- **Cookie-based SSO**: HTTP-only cookies for `mhylle.com` domain
+- **Application Integration**: Each app proxies auth requests through its backend to maintain consistent routing
+- **Separation of Concerns**: ALL business logic in applications, auth service ONLY for authentication
+- **Route Pattern**: Frontend → App Backend → Auth Service for all authentication operations
+
+### Authentication Flow
+```
+Frontend (/app1/) → App1 Backend (/api/app1/auth/*) → Auth Service (/api/auth/*)
+                                   ↓
+                            Sets domain cookies (.mhylle.com)
+                                   ↓
+                            Validates requests via cookie headers
+```
+
+### Database Migration System
+
+Each application uses an **automatic migration system** that runs on startup:
+- **Migration Service**: `database-migrations.service.ts` runs automatically when backend starts
+- **Migration Tracking**: Uses `migrations` table to track completed migrations
+- **Idempotent**: Safe to run multiple times - uses `CREATE TABLE IF NOT EXISTS` patterns
+- **Future-proof**: Easy to add new migrations by adding methods to the service
+- **Deployment Compatible**: Works through GitHub Actions deployment without manual server commands
 
 ## Performance Notes
 
@@ -196,6 +232,6 @@ curl https://mhylle.com/api/app1/health
 - Database connection pooling in NestJS
 - Container resource limits set
 - Health checks prevent unhealthy containers from receiving traffic
-- we have a system architecture with applications that uses a single domain - mhylle.com
-an application is workin as mhylle.com/app1 and mhylle.com/app2
-- We have 3 repositories, the infrastructuere and the ones for app1 and app2
+- System architecture uses single domain (mhylle.com) with subpath routing
+- Applications accessible at mhylle.com/app1, mhylle.com/app2, etc.
+- Repository structure: separate repos for infrastructure, app1, and app2
