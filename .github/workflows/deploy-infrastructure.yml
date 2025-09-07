@@ -169,6 +169,14 @@ jobs:
               exit 1
             fi
             
+            # Automatically set up SSL certificates if needed
+            echo "🔐 Checking SSL certificate setup..."
+            chmod +x ./scripts/auto-ssl-setup.sh
+            ./scripts/auto-ssl-setup.sh || {
+                echo "⚠️  SSL setup failed or not needed - continuing without HTTPS"
+                echo "You can manually set up SSL later by running: ./scripts/setup-ssl.sh"
+            }
+            
             echo "✅ Infrastructure deployed successfully"
 
       - name: Verify deployment
