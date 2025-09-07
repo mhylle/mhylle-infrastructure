@@ -171,11 +171,45 @@ jobs:
             
             # Automatically set up SSL certificates if needed
             echo "🔐 Checking SSL certificate setup..."
-            chmod +x ./scripts/auto-ssl-setup.sh
-            ./scripts/auto-ssl-setup.sh || {
-                echo "⚠️  SSL setup failed or not needed - continuing without HTTPS"
-                echo "You can manually set up SSL later by running: ./scripts/setup-ssl.sh"
-            }
+            
+            DOMAIN="mhylle.com"
+            EMAIL="admin@mhylle.com"
+            SSL_DIR="/opt/mhylle/ssl"
+            WEBROOT="/var/www/certbot"
+            
+            # Check if certificates exist and are valid
+            CERT_VALID=false
+            if [[ -f "$SSL_DIR/mhylle.com.crt" ]]; then
+                if openssl x509 -in "$SSL_DIR/mhylle.com.crt" -noout -checkend 604800 >/dev/null 2>&1; then
+                    CERT_VALID=true
+                    echo "✅ Valid SSL certificates found"
+                    
+                    # Check if HTTPS is already enabled
+                    if docker exec mhylle-nginx nginx -T 2>/dev/null | grep -q "listen 443 ssl"; then
+                        echo "✅ HTTPS configuration already enabled"
+                    else
+                        echo "⚠️  Certificates exist but HTTPS not enabled - manual setup needed"
+                        echo "Run: ssh root@51.159.168.239 './scripts/setup-ssl.sh' to enable HTTPS"
+                    fi
+                else
+                    echo "⚠️  Certificate expires within 7 days - renewal needed"
+                fi
+            else
+                echo "❌ No SSL certificates found"
+                echo ""
+                echo "🔧 To set up HTTPS, run these commands:"
+                echo "  ssh root@51.159.168.239"
+                echo "  cd /home/mhylle.com"
+                echo "  git pull origin main"
+                echo "  ./scripts/setup-ssl.sh"
+                echo "  ./scripts/setup-ssl-renewal.sh"
+                echo ""
+                echo "This will:"
+                echo "- Generate Let's Encrypt SSL certificates"
+                echo "- Enable HTTPS configuration in nginx" 
+                echo "- Set up automatic certificate renewal"
+                echo "- Make HTTPS persist across future deployments"
+            fi
             
             echo "✅ Infrastructure deployed successfully"
 
