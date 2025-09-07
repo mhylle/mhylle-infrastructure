@@ -127,6 +127,10 @@ jobs:
             docker stop mhylle-nginx 2>/dev/null || echo "No existing nginx container to stop"
             docker rm mhylle-nginx 2>/dev/null || echo "No existing nginx container to remove"
             
+            # Ensure SSL directory exists
+            echo "📁 Ensuring SSL directory exists..."
+            mkdir -p /opt/mhylle/ssl
+            
             # Start nginx with new image and proper volume mounts
             echo "🚀 Starting nginx with new configuration..."
             docker run -d \
@@ -136,6 +140,7 @@ jobs:
               -p 80:80 \
               -p 443:443 \
               -v /var/www/certbot:/var/www/certbot:ro \
+              -v /opt/mhylle/ssl:/etc/nginx/ssl:ro \
               "$NGINX_FULL"
             
             # Wait for container to be healthy
