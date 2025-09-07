@@ -2,45 +2,227 @@ name: Deploy Infrastructure
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - 'infrastructure/**'
+      - '.github/workflows/deploy-infrastructure.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'infrastructure/**'
+      - '.github/workflows/deploy-infrastructure.yml'
   workflow_dispatch:
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/nginx
+
 jobs:
-  deploy-infrastructure:
+  test:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
-    - name: Deploy nginx configuration
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.SSH_KEY }}
-        script: |
-          # Create infrastructure directory if it doesn't exist
-          mkdir -p /opt/mhylle/infrastructure/nginx/conf.d
+
+    - name: Validate Dockerfile syntax
+      run: |
+        docker build --no-cache -f infrastructure/nginx/Dockerfile -t test-nginx infrastructure/nginx
+
+    - name: Validate nginx configuration
+      run: |
+        docker run --rm -v $(pwd)/infrastructure/nginx:/etc/nginx:ro test-nginx nginx -t
+
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./infrastructure/nginx
+          file: ./infrastructure/nginx/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    environment:
+      name: production
+      url: https://mhylle.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy infrastructure to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            set -e
+            
+            echo "🚀 Starting infrastructure deployment..."
+            
+            # Extract image information
+            NGINX_FULL=$(echo "${{ needs.build.outputs.image-tag }}" | head -n1)
+            
+            echo "Nginx image: $NGINX_FULL"
+            
+            # Log in to GitHub Container Registry
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # Pull latest image
+            docker pull "$NGINX_FULL"
+            
+            # Stop and remove existing nginx container
+            echo "🛑 Stopping existing nginx container..."
+            docker stop mhylle-nginx 2>/dev/null || echo "No existing nginx container to stop"
+            docker rm mhylle-nginx 2>/dev/null || echo "No existing nginx container to remove"
+            
+            # Start nginx with new image and proper volume mounts
+            echo "🚀 Starting nginx with new configuration..."
+            docker run -d \
+              --name mhylle-nginx \
+              --restart unless-stopped \
+              --network mhylle_app-network \
+              -p 80:80 \
+              -p 443:443 \
+              -v /var/www/certbot:/var/www/certbot:ro \
+              "$NGINX_FULL"
+            
+            # Wait for container to be healthy
+            echo "⏳ Waiting for nginx to be healthy..."
+            for i in {1..30}; do
+              health_status=$(docker inspect --format='{{.State.Health.Status}}' mhylle-nginx 2>/dev/null || echo "none")
+              if [ "$health_status" = "healthy" ]; then
+                echo "✅ Nginx is healthy!"
+                break
+              elif [ "$health_status" = "unhealthy" ]; then
+                echo "❌ Nginx is unhealthy"
+                echo "Container logs:"
+                docker logs mhylle-nginx --tail 20
+                exit 1
+              fi
+              echo "Waiting... ($i/30) - Status: $health_status"
+              sleep 2
+            done
+            
+            # Final health check verification
+            final_health_status=$(docker inspect --format='{{.State.Health.Status}}' mhylle-nginx 2>/dev/null || echo "none")
+            if [ "$final_health_status" != "healthy" ]; then
+              echo "❌ Nginx failed to become healthy (status: $final_health_status)"
+              echo "Container logs:"
+              docker logs mhylle-nginx --tail 30
+              exit 1
+            fi
+            
+            echo "✅ Infrastructure deployed successfully"
+
+      - name: Verify deployment
+        run: |
+          sleep 5
+          # Test nginx is responding
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://51.159.168.239/)
+          if [ $response -eq 200 ] || [ $response -eq 404 ] || [ $response -eq 301 ] || [ $response -eq 302 ]; then
+            echo "✅ Nginx is responding (HTTP $response)"
+          else
+            echo "❌ Nginx not responding correctly (HTTP $response)"
+            exit 1
+          fi
           
-          # Download the latest nginx configuration
-          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3.raw" \
-            -o /tmp/apps.conf \
-            "https://api.github.com/repos/mhylle/mhylle-infrastructure/contents/infrastructure/nginx/conf.d/apps.conf"
-          
-          # Copy to nginx container
-          docker cp /tmp/apps.conf mhylle-nginx:/etc/nginx/conf.d/apps.conf
-          
-          # Test nginx configuration
-          docker exec mhylle-nginx nginx -t
-          
-          # Reload nginx
-          docker exec mhylle-nginx nginx -s reload
-          
-          # Cleanup
-          rm /tmp/apps.conf
-          
-          echo "Infrastructure deployment completed successfully"
+          # Test HTTPS if available
+          https_response=$(curl -k -s -o /dev/null -w "%{http_code}" https://51.159.168.239/ || echo "000")
+          if [ $https_response -eq 200 ] || [ $https_response -eq 404 ] || [ $https_response -eq 301 ] || [ $https_response -eq 302 ]; then
+            echo "✅ HTTPS is also working (HTTP $https_response)"
+          else
+            echo "⚠️ HTTPS returned HTTP $https_response"
+          fi
+
+  cleanup:
+    name: Manual Server Cleanup
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Perform Docker system cleanup
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            set -e
+            echo "🧹 Starting Docker system cleanup..."
+            
+            # Remove unused images
+            docker image prune -a -f --filter "until=24h"
+            
+            # Remove unused containers
+            docker container prune -f
+            
+            # Remove unused volumes (be careful with this)
+            docker volume prune -f --filter "label!=keep"
+            
+            # Remove unused networks
+            docker network prune -f
+            
+            # Clean up build cache
+            docker builder prune -f
+            
+            echo "✅ Docker cleanup completed!"
+            
+            echo "📊 Current disk usage:"
+            df -h /
+            echo "🐳 Docker system info:"
+            docker system df
