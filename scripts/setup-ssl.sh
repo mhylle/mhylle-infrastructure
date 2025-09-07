@@ -82,12 +82,32 @@ chmod 600 "$SSL_DIR"/*.key 2>/dev/null || true
 chmod 644 "$SSL_DIR"/*.crt 2>/dev/null || true
 chmod 644 "$SSL_DIR"/*.pem 2>/dev/null || true
 
-# Restart nginx to load new certificates
-echo "🔄 Reloading nginx configuration..."
-docker exec mhylle-nginx nginx -s reload || {
-    echo "⚠️  Failed to reload nginx, restarting container..."
-    docker restart mhylle-nginx
-}
+# Enable HTTPS configuration in nginx
+echo "🔧 Enabling HTTPS configuration..."
+cd /home/mhylle.com
+
+# Enable HTTPS server block and HTTP to HTTPS redirect
+sed -i '/# Main HTTPS server block - Will be enabled after SSL certificates are generated/,/# }/s/^# *//' infrastructure/nginx/nginx.conf
+sed -i 's|# return 301 https://\$host\$request_uri;|return 301 https://\$host\$request_uri;|' infrastructure/nginx/nginx.conf
+sed -i 's|return 404;|# return 404;|' infrastructure/nginx/nginx.conf
+
+# Rebuild and restart nginx container with new configuration
+echo "🔄 Rebuilding nginx with SSL configuration..."
+docker build -t mhylle-nginx-local infrastructure/nginx/
+
+echo "🔄 Updating nginx container..."
+docker stop mhylle-nginx
+docker rm mhylle-nginx
+
+docker run -d \
+    --name mhylle-nginx \
+    --restart unless-stopped \
+    --network mhylle_app-network \
+    -p 80:80 \
+    -p 443:443 \
+    -v /var/www/certbot:/var/www/certbot:ro \
+    -v /opt/mhylle/ssl:/etc/nginx/ssl:ro \
+    mhylle-nginx-local
 
 # Verify HTTPS is working
 echo "🔍 Verifying HTTPS setup..."
