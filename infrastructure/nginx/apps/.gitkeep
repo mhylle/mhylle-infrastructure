@@ -1,0 +1,2 @@
+# This file ensures the apps/ directory is kept in git
+# App-specific nginx configurations are placed here during deployment
