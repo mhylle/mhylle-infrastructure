@@ -31,7 +31,13 @@ jobs:
 
     - name: Validate nginx configuration
       run: |
-        docker run --rm -v $(pwd)/infrastructure/nginx:/etc/nginx:ro test-nginx nginx -t
+        # Copy configuration files to test container instead of volume mount
+        docker run --rm -d --name test-nginx-config test-nginx tail -f /dev/null
+        docker cp infrastructure/nginx/nginx.conf test-nginx-config:/etc/nginx/nginx.conf
+        docker cp infrastructure/nginx/ssl.conf test-nginx-config:/etc/nginx/ssl.conf
+        docker cp infrastructure/nginx/apps/ test-nginx-config:/etc/nginx/conf.d/
+        docker exec test-nginx-config nginx -t
+        docker stop test-nginx-config
 
   build:
     name: Build Docker Image
