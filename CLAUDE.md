@@ -235,3 +235,4 @@ Each application uses an **automatic migration system** that runs on startup:
 - System architecture uses single domain (mhylle.com) with subpath routing
 - Applications accessible at mhylle.com/app1, mhylle.com/app2, etc.
 - Repository structure: separate repos for infrastructure, app1, and app2
+- Whenever implementing elements you test that everything works using the chrome devtools. This is to ensure that end 2 end works
