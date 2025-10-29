@@ -22,9 +22,17 @@
 - [x] Task 1.5: Notes CRUD module (commit: 9605899)
 - [x] Task 1.6: Bootstrap application (commit: 9492380)
 
-**Phase 1 Summary:** Backend foundation is complete with NestJS 11, TypeORM, PostgreSQL integration, health checks, and basic CRUD operations for notes. All tests passing. System is ready for Phase 2 (Event System).
+**Phase 1 Summary:** Backend foundation is complete with NestJS 11, TypeORM, PostgreSQL integration, health checks, and basic CRUD operations for notes. All tests passing. System is ready for Phase 1.5 (Basic Frontend).
 
-### Phase 2: Event System 🔄 PENDING
+### Phase 1.5: Basic Frontend for Notes CRUD 📋 PENDING
+- [ ] Task 1.5.1: Angular 20 project setup
+- [ ] Task 1.5.2: Material Design configuration
+- [ ] Task 1.5.3: API service for notes
+- [ ] Task 1.5.4: Note list component
+- [ ] Task 1.5.5: Note editor component
+- [ ] Task 1.5.6: Routing and navigation
+
+### Phase 2: Event System 📋 PENDING
 - [ ] Task 2.1: Redis module
 - [ ] Task 2.2: Event schemas
 - [ ] Task 2.3: Event integration
@@ -36,13 +44,7 @@
 - [ ] Task 3.4: Task agent service
 - [ ] Task 3.5: Task listener
 
-### Phase 4: Frontend 📋 PENDING
-- [ ] Angular 20 setup
-- [ ] Note editor component
-- [ ] Task list component
-- [ ] API integration
-
-### Phase 5: Deployment 📋 PENDING
+### Phase 4: Deployment 📋 PENDING
 - [ ] Docker Compose configuration
 - [ ] GitHub Actions CI/CD
 - [ ] Production deployment
@@ -702,6 +704,1111 @@ git commit -m "feat: create main application bootstrap
 - Wire up all modules in AppModule
 - Configure CORS for development and production
 - Add startup logging with health check URL"
+```
+
+## Phase 1.5: Basic Frontend for Notes CRUD
+
+### Task 1.5.1: Initialize Angular 20 Project
+
+**Files:**
+- Create: `frontend/package.json`
+- Create: `frontend/angular.json`
+- Create: `frontend/tsconfig.json`
+- Create: `frontend/src/main.ts`
+- Create: `frontend/src/index.html`
+- Create: `frontend/.env.example`
+
+**Step 1: Create frontend directory and initialize Angular**
+
+```bash
+mkdir -p frontend
+cd frontend
+```
+
+Create `frontend/package.json`:
+```json
+{
+  "name": "notes-frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "test": "ng test",
+    "lint": "ng lint"
+  },
+  "dependencies": {
+    "@angular/animations": "^20.0.0",
+    "@angular/common": "^20.0.0",
+    "@angular/compiler": "^20.0.0",
+    "@angular/core": "^20.0.0",
+    "@angular/forms": "^20.0.0",
+    "@angular/material": "^20.0.0",
+    "@angular/platform-browser": "^20.0.0",
+    "@angular/platform-browser-dynamic": "^20.0.0",
+    "@angular/router": "^20.0.0",
+    "rxjs": "^7.8.1",
+    "tslib": "^2.8.1",
+    "zone.js": "^0.15.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^20.0.0",
+    "@angular/cli": "^20.0.0",
+    "@angular/compiler-cli": "^20.0.0",
+    "@types/jasmine": "~5.1.0",
+    "jasmine-core": "~5.4.0",
+    "karma": "~6.4.4",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "typescript": "~5.7.2"
+  }
+}
+```
+
+**Step 2: Create Angular configuration**
+
+Create `frontend/angular.json`:
+```json
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "notes-frontend": {
+      "projectType": "application",
+      "root": "",
+      "sourceRoot": "src",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:application",
+          "options": {
+            "outputPath": "dist",
+            "index": "src/index.html",
+            "browser": "src/main.ts",
+            "polyfills": ["zone.js"],
+            "tsConfig": "tsconfig.app.json",
+            "assets": ["src/favicon.ico", "src/assets"],
+            "styles": ["src/styles.css"],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "2MB"
+                }
+              ],
+              "outputHashing": "all"
+            }
+          }
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "notes-frontend:build:production"
+            }
+          },
+          "options": {
+            "buildTarget": "notes-frontend:build",
+            "port": 4200
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "polyfills": ["zone.js", "zone.js/testing"],
+            "tsConfig": "tsconfig.spec.json",
+            "assets": ["src/favicon.ico", "src/assets"],
+            "styles": ["src/styles.css"],
+            "scripts": []
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**Step 3: Create TypeScript configurations**
+
+Create `frontend/tsconfig.json`:
+```json
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "outDir": "./dist/out-tsc",
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "declaration": false,
+    "experimentalDecorators": true,
+    "moduleResolution": "bundler",
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "ES2022",
+    "lib": ["ES2022", "dom"]
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  }
+}
+```
+
+Create `frontend/tsconfig.app.json`:
+```json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/app",
+    "types": []
+  },
+  "files": ["src/main.ts"],
+  "include": ["src/**/*.d.ts"]
+}
+```
+
+Create `frontend/tsconfig.spec.json`:
+```json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/spec",
+    "types": ["jasmine"]
+  },
+  "include": ["src/**/*.spec.ts", "src/**/*.d.ts"]
+}
+```
+
+**Step 4: Create environment configuration**
+
+Create `frontend/.env.example`:
+```bash
+# Backend API Configuration
+API_URL=http://localhost:3000
+NODE_ENV=development
+```
+
+**Step 5: Install dependencies**
+
+Run: `npm install`
+Expected: Dependencies installed successfully
+
+**Step 6: Commit**
+
+```bash
+git add frontend/
+git commit -m "feat: initialize Angular 20 frontend project
+
+- Add package.json with Angular 20 and Material dependencies
+- Configure angular.json with build and serve targets
+- Setup TypeScript configuration with strict mode
+- Add environment configuration example"
+```
+
+### Task 1.5.2: Setup Material Design and App Structure
+
+**Files:**
+- Create: `frontend/src/app/app.config.ts`
+- Create: `frontend/src/app/app.component.ts`
+- Create: `frontend/src/app/app.component.html`
+- Create: `frontend/src/app/app.component.css`
+- Create: `frontend/src/main.ts`
+- Create: `frontend/src/index.html`
+- Create: `frontend/src/styles.css`
+
+**Step 1: Create main application files**
+
+Create `frontend/src/main.ts`:
+```typescript
+import { bootstrapApplication } from '@angular/platform-browser';
+import { AppComponent } from './app/app.component';
+import { appConfig } from './app/app.config';
+
+bootstrapApplication(AppComponent, appConfig)
+  .catch((err) => console.error(err));
+```
+
+Create `frontend/src/index.html`:
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Notes System</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="mat-typography">
+  <app-root></app-root>
+</body>
+</html>
+```
+
+Create `frontend/src/styles.css`:
+```css
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+```
+
+**Step 2: Create app configuration with Material Design**
+
+Create `frontend/src/app/app.config.ts`:
+```typescript
+import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(routes),
+    provideHttpClient(),
+    provideAnimationsAsync()
+  ]
+};
+```
+
+**Step 3: Create routes file**
+
+Create `frontend/src/app/app.routes.ts`:
+```typescript
+import { Routes } from '@angular/router';
+
+export const routes: Routes = [
+  {
+    path: '',
+    redirectTo: '/notes',
+    pathMatch: 'full'
+  },
+  {
+    path: 'notes',
+    loadComponent: () => import('./features/notes/note-list/note-list.component').then(m => m.NoteListComponent)
+  }
+];
+```
+
+**Step 4: Create root component**
+
+Create `frontend/src/app/app.component.ts`:
+```typescript
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [RouterOutlet, MatToolbarModule, MatIconModule],
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.css'
+})
+export class AppComponent {
+  title = 'Notes System';
+}
+```
+
+Create `frontend/src/app/app.component.html`:
+```html
+<mat-toolbar color="primary">
+  <mat-icon>note</mat-icon>
+  <span class="toolbar-title">{{ title }}</span>
+</mat-toolbar>
+
+<main class="main-content">
+  <router-outlet></router-outlet>
+</main>
+```
+
+Create `frontend/src/app/app.component.css`:
+```css
+.toolbar-title {
+  margin-left: 8px;
+}
+
+.main-content {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+```
+
+**Step 5: Commit**
+
+```bash
+git add frontend/src/
+git commit -m "feat: setup Material Design and app structure
+
+- Configure standalone Angular app with Material Design
+- Add routing configuration with lazy-loaded notes feature
+- Create root component with Material toolbar
+- Import Material theme and typography"
+```
+
+### Task 1.5.3: Create Notes API Service
+
+**Files:**
+- Create: `frontend/src/app/core/services/notes-api.service.ts`
+- Create: `frontend/src/app/core/services/notes-api.service.spec.ts`
+- Create: `frontend/src/app/core/models/note.model.ts`
+
+**Step 1: Define Note model**
+
+Create `frontend/src/app/core/models/note.model.ts`:
+```typescript
+export interface Note {
+  id: string;
+  content: string;
+  raw_content: string;
+  created_at: Date;
+  updated_at: Date;
+  metadata?: Record<string, any>;
+  source: string;
+}
+
+export interface CreateNoteDto {
+  content: string;
+}
+```
+
+**Step 2: Write failing test for NotesApiService**
+
+Create `frontend/src/app/core/services/notes-api.service.spec.ts`:
+```typescript
+import { TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { NotesApiService } from './notes-api.service';
+import { Note, CreateNoteDto } from '../models/note.model';
+
+describe('NotesApiService', () => {
+  let service: NotesApiService;
+  let httpMock: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule],
+      providers: [NotesApiService]
+    });
+    service = TestBed.inject(NotesApiService);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    httpMock.verify();
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+
+  it('should fetch all notes', () => {
+    const mockNotes: Note[] = [
+      {
+        id: '1',
+        content: 'Test note',
+        raw_content: 'Test note',
+        created_at: new Date(),
+        updated_at: new Date(),
+        source: 'text'
+      }
+    ];
+
+    service.getNotes().subscribe(notes => {
+      expect(notes.length).toBe(1);
+      expect(notes[0].content).toBe('Test note');
+    });
+
+    const req = httpMock.expectOne('http://localhost:3000/notes');
+    expect(req.request.method).toBe('GET');
+    req.flush(mockNotes);
+  });
+
+  it('should create a note', () => {
+    const createDto: CreateNoteDto = { content: 'New note' };
+    const mockNote: Note = {
+      id: '1',
+      content: 'New note',
+      raw_content: 'New note',
+      created_at: new Date(),
+      updated_at: new Date(),
+      source: 'text'
+    };
+
+    service.createNote(createDto).subscribe(note => {
+      expect(note.content).toBe('New note');
+    });
+
+    const req = httpMock.expectOne('http://localhost:3000/notes');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(createDto);
+    req.flush(mockNote);
+  });
+});
+```
+
+**Step 3: Run test to verify it fails**
+
+Run: `cd frontend && npm test`
+Expected: FAIL with "Cannot find module './notes-api.service'"
+
+**Step 4: Implement NotesApiService**
+
+Create `frontend/src/app/core/services/notes-api.service.ts`:
+```typescript
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { Note, CreateNoteDto } from '../models/note.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class NotesApiService {
+  private readonly apiUrl = 'http://localhost:3000/notes';
+
+  constructor(private http: HttpClient) {}
+
+  getNotes(): Observable<Note[]> {
+    return this.http.get<Note[]>(this.apiUrl);
+  }
+
+  getNote(id: string): Observable<Note> {
+    return this.http.get<Note>(`${this.apiUrl}/${id}`);
+  }
+
+  createNote(dto: CreateNoteDto): Observable<Note> {
+    return this.http.post<Note>(this.apiUrl, dto);
+  }
+}
+```
+
+**Step 5: Run test to verify it passes**
+
+Run: `cd frontend && npm test`
+Expected: PASS (all tests)
+
+**Step 6: Commit**
+
+```bash
+git add frontend/src/app/core/
+git commit -m "feat: implement notes API service with TDD
+
+- Define Note and CreateNoteDto interfaces
+- Create NotesApiService with GET and POST methods
+- Write unit tests with HttpClientTestingModule
+- All tests passing"
+```
+
+### Task 1.5.4: Create Note List Component
+
+**Files:**
+- Create: `frontend/src/app/features/notes/note-list/note-list.component.ts`
+- Create: `frontend/src/app/features/notes/note-list/note-list.component.html`
+- Create: `frontend/src/app/features/notes/note-list/note-list.component.css`
+- Create: `frontend/src/app/features/notes/note-list/note-list.component.spec.ts`
+
+**Step 1: Write failing test**
+
+Create `frontend/src/app/features/notes/note-list/note-list.component.spec.ts`:
+```typescript
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { NoteListComponent } from './note-list.component';
+import { NotesApiService } from '../../../core/services/notes-api.service';
+import { of } from 'rxjs';
+import { Note } from '../../../core/models/note.model';
+
+describe('NoteListComponent', () => {
+  let component: NoteListComponent;
+  let fixture: ComponentFixture<NoteListComponent>;
+  let notesService: NotesApiService;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [NoteListComponent, HttpClientTestingModule]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(NoteListComponent);
+    component = fixture.componentInstance;
+    notesService = TestBed.inject(NotesApiService);
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should load notes on init', () => {
+    const mockNotes: Note[] = [
+      {
+        id: '1',
+        content: 'Test note',
+        raw_content: 'Test note',
+        created_at: new Date(),
+        updated_at: new Date(),
+        source: 'text'
+      }
+    ];
+
+    spyOn(notesService, 'getNotes').and.returnValue(of(mockNotes));
+
+    component.ngOnInit();
+
+    expect(notesService.getNotes).toHaveBeenCalled();
+    expect(component.notes().length).toBe(1);
+  });
+});
+```
+
+**Step 2: Run test to verify it fails**
+
+Run: `cd frontend && npm test`
+Expected: FAIL with "Cannot find module"
+
+**Step 3: Implement component**
+
+Create `frontend/src/app/features/notes/note-list/note-list.component.ts`:
+```typescript
+import { Component, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Router } from '@angular/router';
+import { NotesApiService } from '../../../core/services/notes-api.service';
+import { Note } from '../../../core/models/note.model';
+
+@Component({
+  selector: 'app-note-list',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule
+  ],
+  templateUrl: './note-list.component.html',
+  styleUrl: './note-list.component.css'
+})
+export class NoteListComponent implements OnInit {
+  notes = signal<Note[]>([]);
+  loading = signal(false);
+  error = signal<string | null>(null);
+
+  constructor(
+    private notesService: NotesApiService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    this.loadNotes();
+  }
+
+  loadNotes(): void {
+    this.loading.set(true);
+    this.error.set(null);
+
+    this.notesService.getNotes().subscribe({
+      next: (notes) => {
+        this.notes.set(notes);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.error.set('Failed to load notes');
+        this.loading.set(false);
+        console.error('Error loading notes:', err);
+      }
+    });
+  }
+
+  createNote(): void {
+    this.router.navigate(['/notes/new']);
+  }
+
+  editNote(id: string): void {
+    this.router.navigate(['/notes/edit', id]);
+  }
+}
+```
+
+Create `frontend/src/app/features/notes/note-list/note-list.component.html`:
+```html
+<div class="note-list-container">
+  <div class="header">
+    <h2>My Notes</h2>
+    <button mat-raised-button color="primary" (click)="createNote()">
+      <mat-icon>add</mat-icon>
+      New Note
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="error-message">
+      {{ error() }}
+    </div>
+  }
+
+  @if (!loading() && !error()) {
+    @if (notes().length === 0) {
+      <div class="empty-state">
+        <mat-icon>note_add</mat-icon>
+        <p>No notes yet. Create your first note!</p>
+      </div>
+    } @else {
+      <div class="notes-grid">
+        @for (note of notes(); track note.id) {
+          <mat-card class="note-card">
+            <mat-card-content>
+              <p class="note-content">{{ note.content }}</p>
+              <span class="note-date">{{ note.created_at | date:'short' }}</span>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-button (click)="editNote(note.id)">
+                <mat-icon>edit</mat-icon>
+                Edit
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    }
+  }
+</div>
+```
+
+Create `frontend/src/app/features/notes/note-list/note-list.component.css`:
+```css
+.note-list-container {
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.error-message {
+  color: #f44336;
+  padding: 16px;
+  background-color: #ffebee;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #757575;
+}
+
+.empty-state mat-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+}
+
+.notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.note-card {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.note-card:hover {
+  transform: translateY(-4px);
+}
+
+.note-content {
+  margin: 0 0 12px 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.note-date {
+  font-size: 12px;
+  color: #757575;
+}
+```
+
+**Step 4: Run test to verify it passes**
+
+Run: `cd frontend && npm test`
+Expected: PASS (all tests)
+
+**Step 5: Commit**
+
+```bash
+git add frontend/src/app/features/notes/note-list/
+git commit -m "feat: implement note list component with Material Design
+
+- Create NoteListComponent with signal-based state management
+- Display notes in responsive grid layout
+- Add loading and error states
+- Implement navigation to create/edit notes
+- Write unit tests with NotesApiService mock"
+```
+
+### Task 1.5.5: Create Note Editor Component
+
+**Files:**
+- Create: `frontend/src/app/features/notes/note-editor/note-editor.component.ts`
+- Create: `frontend/src/app/features/notes/note-editor/note-editor.component.html`
+- Create: `frontend/src/app/features/notes/note-editor/note-editor.component.css`
+- Create: `frontend/src/app/features/notes/note-editor/note-editor.component.spec.ts`
+
+**Step 1: Write failing test**
+
+Create `frontend/src/app/features/notes/note-editor/note-editor.component.spec.ts`:
+```typescript
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { RouterTestingModule } from '@angular/router/testing';
+import { NoteEditorComponent } from './note-editor.component';
+import { NotesApiService } from '../../../core/services/notes-api.service';
+import { of } from 'rxjs';
+
+describe('NoteEditorComponent', () => {
+  let component: NoteEditorComponent;
+  let fixture: ComponentFixture<NoteEditorComponent>;
+  let notesService: NotesApiService;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [NoteEditorComponent, HttpClientTestingModule, RouterTestingModule]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(NoteEditorComponent);
+    component = fixture.componentInstance;
+    notesService = TestBed.inject(NotesApiService);
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should save note on submit', () => {
+    const mockNote = {
+      id: '1',
+      content: 'Test note',
+      raw_content: 'Test note',
+      created_at: new Date(),
+      updated_at: new Date(),
+      source: 'text'
+    };
+
+    spyOn(notesService, 'createNote').and.returnValue(of(mockNote));
+
+    component.content.set('Test note');
+    component.saveNote();
+
+    expect(notesService.createNote).toHaveBeenCalledWith({ content: 'Test note' });
+  });
+});
+```
+
+**Step 2: Run test to verify it fails**
+
+Run: `cd frontend && npm test`
+Expected: FAIL with "Cannot find module"
+
+**Step 3: Implement component**
+
+Create `frontend/src/app/features/notes/note-editor/note-editor.component.ts`:
+```typescript
+import { Component, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Router } from '@angular/router';
+import { NotesApiService } from '../../../core/services/notes-api.service';
+
+@Component({
+  selector: 'app-note-editor',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule
+  ],
+  templateUrl: './note-editor.component.html',
+  styleUrl: './note-editor.component.css'
+})
+export class NoteEditorComponent {
+  content = signal('');
+  saving = signal(false);
+  error = signal<string | null>(null);
+
+  constructor(
+    private notesService: NotesApiService,
+    private router: Router
+  ) {}
+
+  saveNote(): void {
+    const trimmedContent = this.content().trim();
+
+    if (!trimmedContent) {
+      this.error.set('Note content cannot be empty');
+      return;
+    }
+
+    this.saving.set(true);
+    this.error.set(null);
+
+    this.notesService.createNote({ content: trimmedContent }).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.router.navigate(['/notes']);
+      },
+      error: (err) => {
+        this.error.set('Failed to save note');
+        this.saving.set(false);
+        console.error('Error saving note:', err);
+      }
+    });
+  }
+
+  cancel(): void {
+    this.router.navigate(['/notes']);
+  }
+}
+```
+
+Create `frontend/src/app/features/notes/note-editor/note-editor.component.html`:
+```html
+<div class="editor-container">
+  <div class="header">
+    <h2>Create Note</h2>
+  </div>
+
+  @if (error()) {
+    <div class="error-message">
+      {{ error() }}
+    </div>
+  }
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Note Content</mat-label>
+    <textarea
+      matInput
+      [value]="content()"
+      (input)="content.set($any($event.target).value)"
+      placeholder="Write your note here..."
+      rows="10"
+      [disabled]="saving()">
+    </textarea>
+  </mat-form-field>
+
+  <div class="actions">
+    <button mat-button (click)="cancel()" [disabled]="saving()">
+      Cancel
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="saveNote()"
+      [disabled]="saving() || !content().trim()">
+      @if (saving()) {
+        <mat-spinner diameter="20"></mat-spinner>
+        Saving...
+      } @else {
+        <mat-icon>save</mat-icon>
+        Save Note
+      }
+    </button>
+  </div>
+</div>
+```
+
+Create `frontend/src/app/features/notes/note-editor/note-editor.component.css`:
+```css
+.editor-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.error-message {
+  color: #f44336;
+  padding: 16px;
+  background-color: #ffebee;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+button mat-spinner {
+  display: inline-block;
+  margin-right: 8px;
+}
+```
+
+**Step 4: Run test to verify it passes**
+
+Run: `cd frontend && npm test`
+Expected: PASS (all tests)
+
+**Step 5: Commit**
+
+```bash
+git add frontend/src/app/features/notes/note-editor/
+git commit -m "feat: implement note editor component
+
+- Create NoteEditorComponent with Material form fields
+- Add validation for empty content
+- Implement save and cancel actions with navigation
+- Show loading state during save operation
+- Write unit tests with NotesApiService mock"
+```
+
+### Task 1.5.6: Update Routing and Test Frontend
+
+**Files:**
+- Modify: `frontend/src/app/app.routes.ts`
+
+**Step 1: Update routing configuration**
+
+Update `frontend/src/app/app.routes.ts`:
+```typescript
+import { Routes } from '@angular/router';
+
+export const routes: Routes = [
+  {
+    path: '',
+    redirectTo: '/notes',
+    pathMatch: 'full'
+  },
+  {
+    path: 'notes',
+    loadComponent: () => import('./features/notes/note-list/note-list.component').then(m => m.NoteListComponent)
+  },
+  {
+    path: 'notes/new',
+    loadComponent: () => import('./features/notes/note-editor/note-editor.component').then(m => m.NoteEditorComponent)
+  },
+  {
+    path: 'notes/edit/:id',
+    loadComponent: () => import('./features/notes/note-editor/note-editor.component').then(m => m.NoteEditorComponent)
+  }
+];
+```
+
+**Step 2: Test frontend locally**
+
+Run backend:
+```bash
+cd backend
+npm run start:dev
+```
+
+Run frontend:
+```bash
+cd frontend
+npm start
+```
+
+Open browser: `http://localhost:4200`
+
+Expected:
+- Notes list displays
+- Can navigate to create new note
+- Can create note and see it in list
+- All tests pass: `npm test`
+
+**Step 3: Commit**
+
+```bash
+git add frontend/src/app/app.routes.ts
+git commit -m "feat: configure routing for note list and editor
+
+- Add routes for /notes, /notes/new, /notes/edit/:id
+- Implement lazy loading for all note components
+- Test end-to-end create and list functionality"
 ```
 
 ## Phase 2: Event System (Redis Integration)
@@ -1868,18 +2975,40 @@ git commit -m "feat: subscribe to NOTE_CREATED events in task agent
 
 ---
 
-## Frontend Implementation (Minimal Phase 1)
+## Phase Summary
 
-The plan continues with frontend implementation in the next document section. This represents approximately 50% of the total implementation work.
+**Phase 1: Backend Foundation** (Completed)
+- NestJS 11 backend with TypeORM and PostgreSQL
+- Health checks and basic CRUD operations for notes
+- All tests passing
+
+**Phase 1.5: Basic Frontend for Notes CRUD** (Pending)
+- Angular 20 with Material Design
+- Note list and editor components
+- End-to-end note creation and viewing
+
+**Phase 2: Event System** (Pending)
+- Redis Pub/Sub integration
+- Event-driven architecture for note creation
+
+**Phase 3: LLM Task Agent** (Pending)
+- Ollama integration with DeepSeek-R1:32B
+- Automatic task extraction from notes
+- Event listener for NOTE_CREATED events
+
+**Phase 4: Deployment** (Pending)
+- Docker Compose configuration
+- GitHub Actions CI/CD
+- Production deployment
 
 **Estimated completion time:**
-- Phase 1 (Backend): 6-8 hours
+- Phase 1 (Backend): 6-8 hours ✅ COMPLETED
+- Phase 1.5 (Frontend): 6-8 hours
 - Phase 2 (Events): 2-3 hours
 - Phase 3 (LLM Agent): 4-5 hours
-- Frontend: 6-8 hours
-- Docker/Deployment: 2-3 hours
+- Phase 4 (Deployment): 2-3 hours
 
-**Total**: 20-27 hours for Phase 1-3 implementation
+**Total**: 20-27 hours for complete implementation
 
 ---
 
@@ -1887,16 +3016,16 @@ The plan continues with frontend implementation in the next document section. Th
 
 **Prerequisites:**
 - PostgreSQL running with `notes_db` database
-- Redis running on localhost:6379
-- Ollama running with deepseek-r1:32b model pulled
+- Redis running on localhost:6379 (Phase 2+)
+- Ollama running with deepseek-r1:32b model pulled (Phase 3+)
 - Node.js 20+
 
 **Test Each Phase:**
-- Phase 1: `npm test && npm run start:dev` (verify health endpoint)
-- Phase 2: Create note via API, check Redis events with `redis-cli MONITOR`
-- Phase 3: Create note, verify tasks created in database
+- Phase 1 (Backend): `npm test && npm run start:dev` (verify health endpoint) ✅
+- Phase 1.5 (Frontend): Test create/list notes at http://localhost:4200
+- Phase 2 (Events): Create note via API, check Redis events with `redis-cli MONITOR`
+- Phase 3 (LLM): Create note, verify tasks created in database
+- Phase 4 (Deployment): Health checks and end-to-end testing in production
 
-**Next Steps:**
-- Frontend Angular implementation (separate task list)
-- Docker Compose configuration
-- GitHub Actions CI/CD setup
+**Current Status:**
+Phase 1 complete. Ready to begin Phase 1.5 (Basic Frontend) which must be completed before moving to Phase 2 (Event System).
