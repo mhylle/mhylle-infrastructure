@@ -1,0 +1,47 @@
+<div class="note-list-container">
+  <div class="header">
+    <h2>My Notes</h2>
+    <button mat-raised-button color="primary" (click)="createNote()">
+      <mat-icon>add</mat-icon>
+      New Note
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="error-message">
+      {{ error() }}
+    </div>
+  }
+
+  @if (!loading() && !error()) {
+    @if (notes().length === 0) {
+      <div class="empty-state">
+        <mat-icon>note_add</mat-icon>
+        <p>No notes yet. Create your first note!</p>
+      </div>
+    } @else {
+      <div class="notes-grid">
+        @for (note of notes(); track note.id) {
+          <mat-card class="note-card">
+            <mat-card-content>
+              <p class="note-content">{{ note.content }}</p>
+              <span class="note-date">{{ note.created_at | date:'short' }}</span>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-button (click)="editNote(note.id)">
+                <mat-icon>edit</mat-icon>
+                Edit
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    }
+  }
+</div>
