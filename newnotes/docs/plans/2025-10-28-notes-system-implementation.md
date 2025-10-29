@@ -72,17 +72,59 @@
 - Ready for Phase 2: Event System (Redis, event schemas, integration)
 
 **Next Steps:**
-- Begin Phase 2: Event System implementation
-- Task 2.1: Redis module setup
-- Task 2.2: Event schemas definition
-- Task 2.3: Event integration with notes
+- Begin Phase 3: LLM Task Agent implementation
+- Task 3.1: Create LLM Service with Ollama Provider
+- Task 3.2: Build Task Extraction Agent
+- Task 3.3: Store Extracted Tasks
 
 ---
 
-### Phase 2: Event System 📋 PENDING
-- [ ] Task 2.1: Redis module
-- [ ] Task 2.2: Event schemas
-- [ ] Task 2.3: Event integration
+### Session 2025-10-29 (continued): Phase 2 Complete ✅
+
+**Completed:**
+- Phase 2: Event System (Redis Integration) ✅ (all 3 tasks)
+
+**Phase 2 Implementation Details:**
+- Task 2.1 (768b342): Setup Redis Module
+  - Added ioredis@5.3.2 dependency
+  - Created RedisService with pub/sub capabilities
+  - Lifecycle hooks for connection management
+  - Full test coverage (2/2 tests passing)
+
+- Task 2.2 (e8f3ab4): Define Event Schemas
+  - Created NoteCreatedEvent class
+  - Event structure: { noteId, content, metadata: { userId, createdAt, tags }, timestamp }
+  - Barrel exports from shared/events
+
+- Task 2.3 (757207c): Integrate Event Publishing
+  - Integrated RedisService into NotesService
+  - Publishes NoteCreatedEvent to 'notes:created' channel
+  - Updated module imports (RedisModule wired into AppModule)
+  - Added Jest path alias configuration
+  - Full test coverage (4/4 total tests passing)
+
+**Configuration:**
+- Redis: localhost:11004 (Docker container mynotes-redis)
+- Event channel: 'notes:created'
+- Fixed .env: REDIS_PORT=11004 (was incorrectly 6379)
+
+**Testing:**
+- Backend tests: 4/4 passing (2 Redis + 2 Notes)
+- Build: webpack compiled successfully (zero errors/warnings)
+- Runtime: Redis client connected and operational
+
+**Current State:**
+- Event-driven architecture fully operational
+- Redis Pub/Sub infrastructure ready
+- Events publishing successfully on note creation
+- Ready for Phase 3: LLM Task Agent
+
+---
+
+### Phase 2: Event System ✅ COMPLETED
+- [x] Task 2.1: Redis module (commit: 768b342)
+- [x] Task 2.2: Event schemas (commit: e8f3ab4)
+- [x] Task 2.3: Event integration (commit: 757207c)
 
 ### Phase 3: LLM Task Agent 📋 PENDING
 - [ ] Task 3.1: LLM provider interface
