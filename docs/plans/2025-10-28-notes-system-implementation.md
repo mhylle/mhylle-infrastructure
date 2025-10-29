@@ -24,13 +24,41 @@
 
 **Phase 1 Summary:** Backend foundation is complete with NestJS 11, TypeORM, PostgreSQL integration, health checks, and basic CRUD operations for notes. All tests passing. System is ready for Phase 1.5 (Basic Frontend).
 
-### Phase 1.5: Basic Frontend for Notes CRUD 📋 PENDING
-- [ ] Task 1.5.1: Angular 20 project setup
-- [ ] Task 1.5.2: Material Design configuration
-- [ ] Task 1.5.3: API service for notes
+### Phase 1.5: Basic Frontend 🔄 IN PROGRESS
+- [x] Task 1.5.1: Angular 20 setup (commit: a2a97e1)
+- [x] Task 1.5.2: Material Design configuration (commit: a32730b)
+- [x] Task 1.5.3: API service with TDD (commit: 437b62e)
 - [ ] Task 1.5.4: Note list component
 - [ ] Task 1.5.5: Note editor component
-- [ ] Task 1.5.6: Routing and navigation
+- [ ] Task 1.5.6: Routing setup
+
+**Phase 1.5 Progress:** Angular 20 project initialized with Material Design. API service complete with environment-based configuration (port 3005). Tests passing (6/6). Ready for component implementation.
+
+## Session Notes
+
+### Session 2025-10-29: Phase 1 & Phase 1.5 (Partial)
+
+**Completed:**
+- Phase 1: Backend Foundation ✅ (all 6 tasks)
+- Phase 1.5: Tasks 1.5.1-1.5.3 ✅ (Angular setup, Material Design, API service)
+
+**Testing:**
+- Backend tested manually: All CRUD endpoints working on port 3005
+- Frontend tests: 6/6 passing (NotesApiService)
+- Backend API: `http://localhost:3005/api/notes/notes`
+- Frontend dev server: `http://localhost:4200` (compile error due to missing NoteListComponent - expected)
+
+**Current State:**
+- Backend running successfully with tested endpoints
+- Frontend project structure complete with Material Design
+- API service implemented with environment variables
+- Routing configured but waiting for NoteListComponent (Task 1.5.4)
+
+**Next Steps:**
+- Continue with Tasks 1.5.4-1.5.6 to complete Phase 1.5
+- Tasks 1.5.4-1.5.6 will implement UI components for notes CRUD
+
+---
 
 ### Phase 2: Event System 📋 PENDING
 - [ ] Task 2.1: Redis module
