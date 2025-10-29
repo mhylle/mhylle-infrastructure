@@ -44,6 +44,12 @@ node_modules/
 example-app1/
 example-app2/
 
+# Notes system build artifacts
+newnotes/backend/dist/
+newnotes/frontend/.angular/
+newnotes/.claude/
+newnotes/.specify/
+
 # Keep only infrastructure and documentation
 !docs/
 !scripts/

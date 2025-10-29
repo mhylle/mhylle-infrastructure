@@ -236,3 +236,6 @@ Each application uses an **automatic migration system** that runs on startup:
 - Applications accessible at mhylle.com/app1, mhylle.com/app2, etc.
 - Repository structure: separate repos for infrastructure, app1, and app2
 - Whenever implementing elements you test that everything works using the chrome devtools. This is to ensure that end 2 end works
+- when you do anytthing - use subagents in order to preserve context. I want you to use this 200k context window to orchestrate other
+200k context window agents - basically, everytime you need to code something, use a subagent - please store this in your memory so you
+ don't forget
