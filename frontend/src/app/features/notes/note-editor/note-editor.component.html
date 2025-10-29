@@ -1,0 +1,42 @@
+<div class="editor-container">
+  <div class="header">
+    <h2>Create Note</h2>
+  </div>
+
+  @if (error()) {
+    <div class="error-message">
+      {{ error() }}
+    </div>
+  }
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Note Content</mat-label>
+    <textarea
+      matInput
+      [value]="content()"
+      (input)="content.set($any($event.target).value)"
+      placeholder="Write your note here..."
+      rows="10"
+      [disabled]="saving()">
+    </textarea>
+  </mat-form-field>
+
+  <div class="actions">
+    <button mat-button (click)="cancel()" [disabled]="saving()">
+      Cancel
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="saveNote()"
+      [disabled]="saving() || !content().trim()">
+      @if (saving()) {
+        <mat-spinner diameter="20"></mat-spinner>
+        Saving...
+      } @else {
+        <mat-icon>save</mat-icon>
+        Save Note
+      }
+    </button>
+  </div>
+</div>
