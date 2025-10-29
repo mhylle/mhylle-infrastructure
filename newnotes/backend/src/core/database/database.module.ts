@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Note } from '@shared/entities/note.entity';
+import { Note, Task } from '@shared/entities';
 
 @Module({
   imports: [
@@ -15,7 +15,7 @@ import { Note } from '@shared/entities/note.entity';
         username: configService.get('database.username'),
         password: configService.get('database.password'),
         database: configService.get('database.database'),
-        entities: [Note],
+        entities: [Note, Task],
         synchronize: configService.get('environment') === 'development',
         logging: configService.get('environment') === 'development',
       }),
