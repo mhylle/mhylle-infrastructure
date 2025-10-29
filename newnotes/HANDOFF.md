@@ -53,6 +53,34 @@ Completed:
   - All tests passing
   - End-to-end testing completed successfully
 
+**Phase 2: Event System (Redis Integration) ✅ COMPLETE (3/3 tasks)**
+
+Completed:
+- ✅ Task 2.1: Setup Redis Module (commit: 768b342)
+  - Added ioredis@5.3.2 dependency
+  - Created RedisService with pub/sub capabilities
+  - Lifecycle hooks for connection management
+  - Full test coverage with mocked dependencies
+  - 2/2 tests passing
+
+- ✅ Task 2.2: Define Event Schemas (commit: e8f3ab4)
+  - Created NoteCreatedEvent class
+  - Event includes: noteId, content, metadata, timestamp
+  - Barrel exports from shared/events
+
+- ✅ Task 2.3: Integrate Event Publishing (commit: 757207c)
+  - Integrated RedisService into NotesService
+  - Publishes NoteCreatedEvent to 'notes:created' channel after note creation
+  - Updated module imports (RedisModule wired into AppModule)
+  - Added Jest path alias configuration
+  - 4/4 tests passing (2 Redis + 2 Notes)
+
+**Redis Configuration:**
+- Host: localhost
+- Port: 11004 (Docker container mynotes-redis)
+- Event channel: 'notes:created'
+- Event format: { noteId, content, metadata: { userId, createdAt, tags }, timestamp }
+
 ### End-to-End Testing Results ✅
 
 **Testing Date:** 2025-10-29
@@ -116,28 +144,31 @@ npm test
 
 ## Next Steps
 
-Phase 1.5 is complete! The basic notes system is fully functional with:
-- ✅ Full CRUD operations (Create, Read working; Update/Delete ready)
-- ✅ Angular 20 frontend with Material Design
-- ✅ NestJS 11 backend with PostgreSQL
-- ✅ End-to-end testing verified
-- ✅ Zero build warnings
-- ✅ All tests passing (10/10)
+**Phase 2 is complete!** The event-driven architecture is now operational:
+- ✅ Redis Pub/Sub infrastructure with RedisService
+- ✅ NoteCreatedEvent schema defined
+- ✅ Event publishing integrated into NotesService
+- ✅ All tests passing (4/4 backend tests)
+- ✅ Build with zero errors
+- ✅ Redis connected and logging properly
 
-**Potential Future Enhancements:**
-1. **Phase 2:** Advanced Features
-   - Note editing functionality
-   - Note deletion with confirmation
-   - Search and filtering
-   - Tags and categories
-   - Rich text editing
+**Ready for Phase 3: LLM Task Agent**
 
-2. **Phase 3:** Polish & Optimization
-   - Loading states and animations
-   - Error handling improvements
-   - Pagination for large note lists
-   - Responsive design refinements
-   - Performance optimization
+Phase 3 will add AI-powered task extraction from notes using Ollama (DeepSeek-R1:32B):
+1. **Task 3.1:** Create LLM Service with Ollama Provider
+   - AI provider interface
+   - LocalModelService implementation
+   - Health checks and error handling
+
+2. **Task 3.2:** Build Task Extraction Agent
+   - Subscribe to 'notes:created' events
+   - Send note content to Ollama for analysis
+   - Parse task JSON responses
+
+3. **Task 3.3:** Store Extracted Tasks
+   - Create Task entity
+   - TasksService with CRUD
+   - Link tasks to source notes
 
 ## Important Context
 
@@ -147,6 +178,8 @@ Phase 1.5 is complete! The basic notes system is fully functional with:
 - **Backend port:** 3005 (not 3000)
 - **API prefix:** `/api/notes/`
 - **Database:** PostgreSQL on port 11003, database `notes_db`
+- **Redis:** Port 11004 (Docker container mynotes-redis), used for event pub/sub
+- **Ollama:** Port 11434 (configured in .env), model: deepseek-r1:32b
 
 ## Recommended Approach
 
