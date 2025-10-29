@@ -15,10 +15,6 @@ async function bootstrap() {
   // Global prefix
   app.setGlobalPrefix('api/notes');
 
-  // Health check endpoints
-  const healthController = app.get('HealthController');
-  app.use('/health', (req, res) => res.redirect('/api/notes/health'));
-
   // DNS resolution fix
   const dns = require('dns');
   dns.setDefaultResultOrder('ipv4first');
