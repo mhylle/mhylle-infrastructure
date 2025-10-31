@@ -90,6 +90,174 @@ frontend/src/app/
     └── directives/
 ```
 
+## Frontend Component Design
+
+### Component Architecture
+
+The Angular frontend uses a feature-based structure with three primary components for note management:
+
+#### Note List Component
+
+**Purpose**: Display all notes in a scrollable card-based layout.
+
+**Features**:
+- Card-based display with note preview (first 200 characters)
+- Creation date timestamp
+- Edit button for direct navigation to editor
+- Click-to-view interaction (card click opens detail view)
+- Create new note button
+
+**Navigation**:
+- Card click → Navigate to `/notes/:id` (detail view)
+- Edit button → Navigate to `/notes/edit/:id` (edit mode)
+- Create button → Navigate to `/notes/new` (create mode)
+
+#### Note Editor Component
+
+**Purpose**: Create new notes or edit existing notes.
+
+**Modes**:
+
+1. **Create Mode** (route: `/notes/new`)
+   - Empty editor
+   - "Create Note" title
+   - Calls `POST /api/notes` on save
+   - Redirects to list on success
+
+2. **Edit Mode** (route: `/notes/edit/:id`)
+   - Loads existing note content via `GET /api/notes/:id`
+   - "Edit Note" title
+   - Calls `PATCH /api/notes/:id` on save
+   - Redirects to detail view or list on success
+
+**State Management**:
+- Detects mode from route parameter (`:id` present = edit mode)
+- Loads note data in edit mode during `ngOnInit`
+- Displays loading state while fetching note
+- Shows error state if note not found
+
+**Validation**:
+- Minimum content length: 1 character
+- Maximum content length: 10,000 characters
+- Trims whitespace before submission
+
+#### Note Detail Component
+
+**Purpose**: Display full note content in read-only mode with metadata and actions.
+
+**Layout**:
+```
+┌─────────────────────────────────────┐
+│ Note Detail                    [×]  │
+├─────────────────────────────────────┤
+│                                     │
+│ Full note content displayed here    │
+│ (no truncation)                     │
+│                                     │
+├─────────────────────────────────────┤
+│ Metadata:                           │
+│ Created: Oct 28, 2025 10:30 AM     │
+│ Updated: Oct 30, 2025 2:15 PM      │
+│ Source: text                        │
+│ Tasks: 3 extracted                  │
+├─────────────────────────────────────┤
+│ [Edit] [Delete] [Back to List]     │
+└─────────────────────────────────────┘
+```
+
+**Data Display**:
+- Full note content (no truncation)
+- Creation timestamp
+- Last update timestamp
+- Source type (text, voice, etc.)
+- Task count (if tasks extracted)
+
+**Actions**:
+- **Edit Button**: Navigate to `/notes/edit/:id`
+- **Delete Button**: Confirmation dialog → `DELETE /api/notes/:id` → Navigate to list
+- **Back Button**: Navigate to `/notes` (list view)
+
+**Route**: `/notes/:id`
+
+**Error Handling**:
+- 404 Not Found → Display "Note not found" message with back button
+- Network errors → Display error message with retry button
+
+## User Flows
+
+### Create Note Flow
+
+```
+List View (/notes)
+    ↓ [Click "Create Note"]
+Editor - Create Mode (/notes/new)
+    ↓ [Enter content & Save]
+API Call: POST /notes
+    ↓ [Success]
+List View (/notes) - Shows new note
+```
+
+### View Note Flow
+
+```
+List View (/notes)
+    ↓ [Click note card]
+Detail View (/notes/:id)
+    ↓ [Load note via GET /notes/:id]
+Display full content + metadata
+    ↓ [User options]
+    ├─ [Edit] → Editor - Edit Mode
+    ├─ [Delete] → Confirm → List View
+    └─ [Back] → List View
+```
+
+### Edit Note Flow
+
+```
+Detail View (/notes/:id)
+    ↓ [Click "Edit"]
+Editor - Edit Mode (/notes/edit/:id)
+    ↓ [Load note via GET /notes/:id]
+    ↓ [Modify content & Save]
+API Call: PATCH /notes/:id
+    ↓ [Success]
+Detail View (/notes/:id) - Shows updated content
+```
+
+**Alternative Edit Path**:
+```
+List View (/notes)
+    ↓ [Click "Edit" button on card]
+Editor - Edit Mode (/notes/edit/:id)
+    ↓ [Direct navigation, skips detail view]
+```
+
+### Delete Note Flow
+
+```
+Detail View (/notes/:id)
+    ↓ [Click "Delete"]
+Confirmation Dialog
+    ↓ [Confirm]
+API Call: DELETE /notes/:id
+    ↓ [Success]
+List View (/notes) - Note removed
+```
+
+### Navigation Matrix
+
+| From State | Action | To State | API Call |
+|------------|--------|----------|----------|
+| List | Click card | Detail | GET /notes/:id |
+| List | Click "Edit" | Editor (edit) | GET /notes/:id |
+| List | Click "Create" | Editor (create) | None |
+| Detail | Click "Edit" | Editor (edit) | None (already loaded) |
+| Detail | Click "Delete" | List | DELETE /notes/:id |
+| Detail | Click "Back" | List | None |
+| Editor (create) | Save | List | POST /notes |
+| Editor (edit) | Save | Detail | PATCH /notes/:id |
+| Editor | Cancel | Previous route | None |
+
 ## Data Model
 
 ### Notes Table
