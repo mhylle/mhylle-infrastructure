@@ -1,0 +1,189 @@
+<!-- Loading State -->
+@if (loading()) {
+  <div class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p class="loading-text">Loading note...</p>
+  </div>
+}
+
+<!-- Error State -->
+@if (error() && !loading()) {
+  <mat-card class="error-card">
+    <mat-card-content>
+      <div class="error-content">
+        <mat-icon class="error-icon">error_outline</mat-icon>
+        <h2 class="error-title">{{ error() }}</h2>
+        <div class="error-actions">
+          <button mat-raised-button color="primary" (click)="loadNote()">
+            <mat-icon>refresh</mat-icon>
+            Retry
+          </button>
+          <button mat-button (click)="onBack()">
+            <mat-icon>arrow_back</mat-icon>
+            Back to List
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+}
+
+<!-- Success State - Note Display -->
+@if (note() && !loading() && !error()) {
+  <div class="note-detail-container">
+    <!-- Header Actions Bar -->
+    <mat-toolbar class="header-actions">
+      <div class="left-actions">
+        <button mat-button (click)="onBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Back to List
+        </button>
+      </div>
+      <span class="spacer"></span>
+      <div class="right-actions">
+        <button mat-raised-button color="primary" (click)="onEdit()">
+          <mat-icon>edit</mat-icon>
+          Edit
+        </button>
+        <button mat-raised-button color="warn" (click)="onDelete()">
+          <mat-icon>delete</mat-icon>
+          Delete
+        </button>
+      </div>
+    </mat-toolbar>
+
+    <!-- Note Content Card -->
+    <mat-card class="note-content-card">
+      <mat-card-header>
+        <mat-card-title>Note Details</mat-card-title>
+      </mat-card-header>
+
+      <mat-divider></mat-divider>
+
+      <mat-card-content>
+        <!-- Note Content -->
+        <div class="note-content">
+          <pre class="note-text">{{ note()!.content }}</pre>
+        </div>
+
+        <mat-divider class="section-divider"></mat-divider>
+
+        <!-- Metadata Section -->
+        <div class="metadata-section">
+          <h3 class="metadata-title">Metadata</h3>
+
+          <div class="metadata-grid">
+            <!-- Created Date -->
+            <div class="metadata-item">
+              <span class="metadata-label">Created:</span>
+              <span class="metadata-value">{{ createdDate() }}</span>
+            </div>
+
+            <!-- Updated Date (only if different from created) -->
+            @if (hasBeenUpdated()) {
+              <div class="metadata-item">
+                <span class="metadata-label">Updated:</span>
+                <span class="metadata-value">{{ updatedDate() }}</span>
+              </div>
+            }
+
+            <!-- Source Type -->
+            <div class="metadata-item">
+              <span class="metadata-label">Source:</span>
+              <span class="metadata-value">{{ note()!.source }}</span>
+            </div>
+
+            <!-- Task Count (only if > 0) -->
+            @if (taskCount() > 0) {
+              <div class="metadata-item">
+                <span class="metadata-label">Tasks:</span>
+                <span class="metadata-value task-badge">
+                  <mat-icon class="task-icon">task_alt</mat-icon>
+                  {{ taskCount() }} extracted
+                </span>
+              </div>
+            }
+          </div>
+
+          <!-- Last Updated Relative Time -->
+          @if (hasBeenUpdated()) {
+            <div class="last-updated">
+              <mat-icon class="update-icon">schedule</mat-icon>
+              <span class="update-text">Last updated recently</span>
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Tasks Section -->
+    <mat-card class="tasks-section-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>task</mat-icon>
+          Extracted Tasks
+          @if (totalTasks() > 0) {
+            <span class="task-count-badge">({{ totalTasks() }})</span>
+          }
+          @if (completedTasks() > 0) {
+            <span class="completion-rate">
+              {{ completedTasks() }}/{{ totalTasks() }} completed
+            </span>
+          }
+        </mat-card-title>
+      </mat-card-header>
+
+      <mat-divider></mat-divider>
+
+      <mat-card-content>
+        @if (tasksLoading()) {
+          <div class="tasks-loading">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Loading tasks...</p>
+          </div>
+        } @else if (tasksError()) {
+          <div class="tasks-error">
+            <mat-icon>error_outline</mat-icon>
+            <p>{{ tasksError() }}</p>
+          </div>
+        } @else if (tasks().length === 0) {
+          <div class="tasks-empty">
+            <mat-icon>task_alt</mat-icon>
+            <p>No tasks extracted from this note</p>
+          </div>
+        } @else {
+          <div class="task-list-compact">
+            @for (task of tasks(); track task.id) {
+              <div class="task-item" [class.completed]="task.status === 'completed'">
+                <mat-checkbox
+                  [checked]="task.status === 'completed'"
+                  (change)="toggleTaskStatus(task)">
+                </mat-checkbox>
+                <div class="task-content">
+                  <span class="task-title">{{ task.title }}</span>
+                  <div class="task-badges">
+                    <mat-chip [class]="'priority-' + task.priority">
+                      {{ task.priority }}
+                    </mat-chip>
+                    <mat-chip [class]="'status-' + task.status">
+                      {{ task.status.replace('_', ' ') }}
+                    </mat-chip>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <mat-divider class="tasks-divider"></mat-divider>
+
+          <div class="view-all-tasks">
+            <a mat-raised-button color="primary" [routerLink]="['/tasks']" [queryParams]="{noteId: note()?.id}">
+              View All Tasks
+              <mat-icon>arrow_forward</mat-icon>
+            </a>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  </div>
+}

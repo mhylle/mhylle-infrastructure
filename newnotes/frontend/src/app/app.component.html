@@ -1,6 +1,19 @@
 <mat-toolbar color="primary">
   <mat-icon>note</mat-icon>
   <span class="toolbar-title">{{ title }}</span>
+
+  <span class="spacer"></span>
+
+  <nav class="nav-links">
+    <a mat-button routerLink="/notes" routerLinkActive="active">
+      <mat-icon>description</mat-icon>
+      Notes
+    </a>
+    <a mat-button routerLink="/tasks" routerLinkActive="active">
+      <mat-icon>task</mat-icon>
+      Tasks
+    </a>
+  </nav>
 </mat-toolbar>
 
 <main class="main-content">

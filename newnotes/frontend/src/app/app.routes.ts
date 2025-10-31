@@ -17,5 +17,13 @@ export const routes: Routes = [
   {
     path: 'notes/edit/:id',
     loadComponent: () => import('./features/notes/note-editor/note-editor.component').then(m => m.NoteEditorComponent)
+  },
+  {
+    path: 'notes/:id',
+    loadComponent: () => import('./features/notes/note-detail/note-detail.component').then(m => m.NoteDetailComponent)
+  },
+  {
+    path: 'tasks',
+    loadComponent: () => import('./features/tasks/task-list/task-list.component').then(m => m.TaskListComponent)
   }
 ];

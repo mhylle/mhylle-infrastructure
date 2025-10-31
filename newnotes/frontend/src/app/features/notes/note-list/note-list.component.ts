@@ -59,4 +59,8 @@ export class NoteListComponent implements OnInit {
   editNote(id: string): void {
     this.router.navigate(['/notes/edit', id]);
   }
+
+  viewNote(id: string): void {
+    this.router.navigate(['/notes', id]);
+  }
 }

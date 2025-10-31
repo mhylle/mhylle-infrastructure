@@ -1,6 +1,12 @@
 <div class="editor-container">
   <div class="header">
-    <h2>Create Note</h2>
+    <h2>
+      @if (isEditMode()) {
+        Edit Note
+      } @else {
+        Create Note
+      }
+    </h2>
   </div>
 
   @if (error()) {
@@ -36,7 +42,11 @@
       } @else {
         <ng-container>
           <mat-icon>save</mat-icon>
-          Save Note
+          @if (isEditMode()) {
+            Update Note
+          } @else {
+            Save Note
+          }
         </ng-container>
       }
     </button>

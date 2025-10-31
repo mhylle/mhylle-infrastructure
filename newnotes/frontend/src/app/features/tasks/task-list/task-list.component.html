@@ -1,0 +1,134 @@
+<div class="task-list-container">
+  <div class="header">
+    <h2>Tasks</h2>
+    <div class="filters">
+      <mat-form-field appearance="outline" class="filter-select">
+        <mat-label>Status</mat-label>
+        <mat-select [value]="selectedStatus()" (selectionChange)="filterByStatus($event.value)">
+          @for (status of statusOptions; track status) {
+            <mat-option [value]="status">
+              {{ formatStatusLabel(status) }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-select">
+        <mat-label>Priority</mat-label>
+        <mat-select [value]="selectedPriority()" (selectionChange)="filterByPriority($event.value)">
+          @for (priority of priorityOptions; track priority) {
+            <mat-option [value]="priority">
+              {{ formatPriorityLabel(priority) }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-icon-button (click)="refreshTasks()" matTooltip="Refresh tasks">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="error-message">
+      <mat-icon>error</mat-icon>
+      {{ error() }}
+    </div>
+  }
+
+  @if (!loading() && !error()) {
+    @if (filteredTasks().length === 0) {
+      <div class="empty-state">
+        <mat-icon>task_alt</mat-icon>
+        <p>No tasks found. Try adjusting your filters.</p>
+      </div>
+    } @else {
+      <div class="tasks-grid">
+        @for (task of filteredTasks(); track task.id) {
+          <mat-card class="task-card" [class.completed]="task.status === TaskStatus.COMPLETED">
+            <mat-card-header>
+              <mat-card-title>{{ task.title }}</mat-card-title>
+              <div class="badges">
+                <mat-chip [class]="getStatusColor(task.status)">
+                  {{ formatStatusLabel(task.status) }}
+                </mat-chip>
+                <mat-chip [class]="getPriorityColor(task.priority)">
+                  {{ formatPriorityLabel(task.priority) }}
+                </mat-chip>
+              </div>
+            </mat-card-header>
+
+            <mat-card-content>
+              @if (task.description) {
+                <p class="task-description">{{ task.description }}</p>
+              }
+
+              <div class="task-meta">
+                @if (task.due_date) {
+                  <div class="meta-item">
+                    <mat-icon>event</mat-icon>
+                    <span>Due: {{ task.due_date | date:'short' }}</span>
+                  </div>
+                }
+
+                @if (task.completed_at) {
+                  <div class="meta-item">
+                    <mat-icon>check_circle</mat-icon>
+                    <span>Completed: {{ task.completed_at | date:'short' }}</span>
+                  </div>
+                }
+
+                <div class="meta-item">
+                  <mat-icon>schedule</mat-icon>
+                  <span>Created: {{ task.created_at | date:'short' }}</span>
+                </div>
+              </div>
+            </mat-card-content>
+
+            <mat-card-actions>
+              @if (task.status !== TaskStatus.COMPLETED) {
+                <button mat-button (click)="updateTaskStatus(task, TaskStatus.COMPLETED)">
+                  <mat-icon>check</mat-icon>
+                  Complete
+                </button>
+              }
+
+              @if (task.status === TaskStatus.PENDING) {
+                <button mat-button (click)="updateTaskStatus(task, TaskStatus.IN_PROGRESS)">
+                  <mat-icon>play_arrow</mat-icon>
+                  Start
+                </button>
+              }
+
+              @if (task.status === TaskStatus.IN_PROGRESS) {
+                <button mat-button (click)="updateTaskStatus(task, TaskStatus.PENDING)">
+                  <mat-icon>pause</mat-icon>
+                  Pause
+                </button>
+              }
+
+              @if (task.status === TaskStatus.COMPLETED) {
+                <button mat-button (click)="updateTaskStatus(task, TaskStatus.PENDING)">
+                  <mat-icon>restart_alt</mat-icon>
+                  Reopen
+                </button>
+              }
+
+              <button mat-button color="warn" (click)="deleteTask(task)">
+                <mat-icon>delete</mat-icon>
+                Delete
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    }
+  }
+</div>

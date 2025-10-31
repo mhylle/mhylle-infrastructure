@@ -28,13 +28,13 @@
     } @else {
       <div class="notes-grid">
         @for (note of notes(); track note.id) {
-          <mat-card class="note-card">
+          <mat-card class="note-card" (click)="viewNote(note.id)">
             <mat-card-content>
               <p class="note-content">{{ note.content }}</p>
               <span class="note-date">{{ note.created_at | date:'short' }}</span>
             </mat-card-content>
             <mat-card-actions>
-              <button mat-button (click)="editNote(note.id)">
+              <button mat-button (click)="editNote(note.id); $event.stopPropagation()">
                 <mat-icon>edit</mat-icon>
                 Edit
               </button>

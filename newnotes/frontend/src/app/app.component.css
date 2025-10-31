@@ -2,6 +2,25 @@
   margin-left: 8px;
 }
 
+.spacer {
+  flex: 1 1 auto;
+}
+
+.nav-links {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-links a {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-links a.active {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
 .main-content {
   padding: 20px;
   max-width: 1200px;
