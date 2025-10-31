@@ -17,4 +17,9 @@ export default () => ({
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
   },
+  llm: {
+    confidenceThreshold: parseFloat(
+      process.env.LLM_CONFIDENCE_THRESHOLD || '0.5',
+    ),
+  },
 });

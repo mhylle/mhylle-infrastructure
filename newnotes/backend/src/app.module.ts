@@ -4,6 +4,8 @@ import { DatabaseModule } from '@core/database/database.module';
 import { RedisModule } from '@core/redis/redis.module';
 import { HealthModule } from '@core/health/health.module';
 import { NotesModule } from '@features/notes/notes.module';
+import { LLMModule } from '@features/llm-service/llm.module';
+import { TasksModule } from '@features/tasks/tasks.module';
 import configuration from '@core/config/configuration';
 
 @Module({
@@ -16,6 +18,8 @@ import configuration from '@core/config/configuration';
     RedisModule,
     HealthModule,
     NotesModule,
+    LLMModule,
+    TasksModule,
   ],
 })
 export class AppModule {}

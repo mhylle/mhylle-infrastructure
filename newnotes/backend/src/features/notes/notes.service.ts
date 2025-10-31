@@ -6,6 +6,7 @@ import { CreateNoteDto } from '@shared/dto/create-note.dto';
 import { UpdateNoteDto } from '@shared/dto/update-note.dto';
 import { RedisService } from '@core/redis/redis.service';
 import { NoteCreatedEvent } from '@shared/events/note-created.event';
+import { NOTE_EVENTS } from '@features/events/schemas/note-events.schema';
 
 @Injectable()
 export class NotesService {
@@ -23,18 +24,25 @@ export class NotesService {
     const savedNote = await this.notesRepository.save(note);
 
     // Publish NoteCreatedEvent
-    const event = new NoteCreatedEvent({
-      noteId: savedNote.id,
-      content: savedNote.content,
-      metadata: {
-        userId: savedNote.metadata?.userId || 'unknown',
-        createdAt: savedNote.created_at,
-        tags: savedNote.metadata?.tags,
-      },
-      timestamp: new Date(),
-    });
+    try {
+      const event = new NoteCreatedEvent({
+        noteId: savedNote.id,
+        content: savedNote.content,
+        rawContent: savedNote.raw_content,
+        source: savedNote.source || 'api',
+        metadata: {
+          userId: savedNote.metadata?.userId || 'unknown',
+          createdAt: savedNote.created_at,
+          tags: savedNote.metadata?.tags,
+        },
+        timestamp: new Date(),
+      });
 
-    await this.redisService.publish('notes:created', event);
+      await this.redisService.publish(NOTE_EVENTS.NOTE_CREATED, event);
+    } catch (error) {
+      // Log error but don't fail note creation
+      console.error('Failed to publish NOTE_CREATED event:', error);
+    }
 
     return savedNote;
   }
