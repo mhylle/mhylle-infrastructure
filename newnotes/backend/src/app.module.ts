@@ -7,6 +7,7 @@ import { NotesModule } from '@features/notes/notes.module';
 import { LLMModule } from '@features/llm-service/llm.module';
 import { TasksModule } from '@features/tasks/tasks.module';
 import { EmbeddingsModule } from '@features/embeddings/embeddings.module';
+import { SearchModule } from '@features/search/search.module';
 import configuration from '@core/config/configuration';
 
 @Module({
@@ -22,6 +23,7 @@ import configuration from '@core/config/configuration';
     LLMModule,
     TasksModule,
     EmbeddingsModule,
+    SearchModule,
   ],
 })
 export class AppModule {}
