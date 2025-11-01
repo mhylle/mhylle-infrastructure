@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
+import { RedisModule } from '@core/redis/redis.module';
 import { NoteEmbedding } from './entities/note-embedding.entity';
 import { NoteEmbeddingRepository } from './repositories/note-embedding.repository';
 import { EmbeddingsService } from './services/embeddings.service';
@@ -16,6 +17,7 @@ import { EmbeddingsMigrationService } from './services/embeddings-migration.serv
       maxRedirects: 5,
     }),
     ConfigModule,
+    RedisModule,
   ],
   providers: [
     NoteEmbeddingRepository,
