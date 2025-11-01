@@ -1,0 +1,90 @@
+<mat-card class="related-notes-widget">
+  <!-- Header -->
+  <mat-card-header>
+    <mat-card-title class="widget-title">
+      <mat-icon class="title-icon">link</mat-icon>
+      <span>Related Notes</span>
+    </mat-card-title>
+    <div class="header-actions">
+      <button
+        mat-icon-button
+        (click)="refresh()"
+        [disabled]="loading()"
+        matTooltip="Refresh relationships"
+        aria-label="Refresh relationships">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </mat-card-header>
+
+  <!-- Content -->
+  <mat-card-content>
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p class="loading-text">Loading related notes...</p>
+      </div>
+    }
+
+    <!-- Relations Display -->
+    @else if (hasRelations()) {
+      <div class="relations-container">
+        @for (group of groupedRelations(); track trackByType($index, group)) {
+          <div class="relation-group">
+            <!-- Group Header -->
+            <div class="group-header">
+              <mat-icon class="group-icon">{{ getRelationshipIcon(group.type) }}</mat-icon>
+              <h4 class="group-title">
+                {{ getRelationshipLabel(group.type) }}
+                <span class="group-count">({{ group.relations.length }})</span>
+              </h4>
+            </div>
+
+            <!-- Relation Chips -->
+            <mat-chip-set class="relation-chips">
+              @for (rel of group.relations; track trackByNoteId($index, rel)) {
+                <mat-chip
+                  class="relation-chip"
+                  (click)="navigateToNote(rel.id)"
+                  [matTooltip]="rel.content"
+                  highlighted>
+                  <span class="note-preview">
+                    {{ truncateContent(rel.content) }}
+                  </span>
+                  @if (rel.relationship.confidence < 1.0) {
+                    <span class="confidence-badge">
+                      {{ formatConfidence(rel.relationship.confidence) }}
+                    </span>
+                  }
+                </mat-chip>
+              }
+            </mat-chip-set>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Empty State -->
+    @else {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">info_outline</mat-icon>
+        <p class="empty-message">No related notes found yet.</p>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="detectRelationships()"
+          [disabled]="detecting()"
+          class="detect-button">
+          @if (detecting()) {
+            <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+            <span>Detecting...</span>
+          } @else {
+            <mat-icon>search</mat-icon>
+            <span>Find Related Notes</span>
+          }
+        </button>
+      </div>
+    }
+  </mat-card-content>
+</mat-card>

@@ -1,0 +1,189 @@
+.related-notes-widget {
+  margin-top: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #e0e0e0;
+
+    .widget-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+
+      .title-icon {
+        color: #1976d2;
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  mat-card-content {
+    padding: 16px;
+  }
+
+  // Loading state
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    gap: 16px;
+
+    .loading-text {
+      margin: 0;
+      color: #666;
+      font-size: 14px;
+    }
+  }
+
+  // Relations container
+  .relations-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  // Relation group
+  .relation-group {
+    .group-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+
+      .group-icon {
+        color: #1976d2;
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+
+      .group-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+
+        .group-count {
+          color: #666;
+          font-weight: 400;
+          font-size: 14px;
+        }
+      }
+    }
+
+    .relation-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .relation-chip {
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background-color: #e3f2fd;
+      color: #1976d2;
+      font-size: 14px;
+      padding: 8px 12px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      &:hover {
+        background-color: #bbdefb;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .note-preview {
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .confidence-badge {
+        background-color: #1976d2;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+    }
+  }
+
+  // Empty state
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    gap: 16px;
+    text-align: center;
+
+    .empty-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      color: #bbb;
+    }
+
+    .empty-message {
+      margin: 0;
+      color: #666;
+      font-size: 16px;
+    }
+
+    .detect-button {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .button-spinner {
+        display: inline-block;
+      }
+
+      mat-icon {
+        margin: 0;
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .related-notes-widget {
+    mat-card-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+
+      .header-actions {
+        align-self: flex-end;
+      }
+    }
+
+    .relation-chip {
+      .note-preview {
+        max-width: 200px;
+      }
+    }
+  }
+}
