@@ -6,6 +6,7 @@ import { HealthModule } from '@core/health/health.module';
 import { NotesModule } from '@features/notes/notes.module';
 import { LLMModule } from '@features/llm-service/llm.module';
 import { TasksModule } from '@features/tasks/tasks.module';
+import { EmbeddingsModule } from '@features/embeddings/embeddings.module';
 import configuration from '@core/config/configuration';
 
 @Module({
@@ -20,6 +21,7 @@ import configuration from '@core/config/configuration';
     NotesModule,
     LLMModule,
     TasksModule,
+    EmbeddingsModule,
   ],
 })
 export class AppModule {}
