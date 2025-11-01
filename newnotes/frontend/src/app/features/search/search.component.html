@@ -1,0 +1,99 @@
+<div class="search-container">
+  <!-- Search Header -->
+  <div class="search-header">
+    <h1>Search Notes</h1>
+
+    <!-- Search Mode Toggle -->
+    <mat-button-toggle-group
+      [value]="mode()"
+      (change)="onModeChange($event.value)"
+      class="mode-toggle">
+      <mat-button-toggle [value]="SearchMode.SEMANTIC">
+        <mat-icon>psychology</mat-icon>
+        Semantic
+      </mat-button-toggle>
+      <mat-button-toggle [value]="SearchMode.KEYWORD">
+        <mat-icon>search</mat-icon>
+        Keyword
+      </mat-button-toggle>
+      <mat-button-toggle [value]="SearchMode.HYBRID">
+        <mat-icon>merge_type</mat-icon>
+        Hybrid
+      </mat-button-toggle>
+    </mat-button-toggle-group>
+  </div>
+
+  <!-- Search Input -->
+  <mat-form-field class="search-input" appearance="outline">
+    <mat-label>Search your notes...</mat-label>
+    <input
+      matInput
+      [value]="query()"
+      (input)="onQueryChange($any($event.target).value)"
+      placeholder="e.g., docker best practices"
+      autofocus
+    />
+    <button
+      *ngIf="query()"
+      matSuffix
+      mat-icon-button
+      (click)="clearSearch()"
+      aria-label="Clear">
+      <mat-icon>close</mat-icon>
+    </button>
+    <mat-icon matPrefix>search</mat-icon>
+  </mat-form-field>
+
+  <!-- Processing Time -->
+  <div *ngIf="processingTime() !== null" class="processing-time">
+    Found {{ results().length }} results in {{ processingTime() }}ms
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading()" class="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Searching...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error()" class="error">
+    <mat-icon>error</mat-icon>
+    <p>{{ error() }}</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="isEmpty()" class="empty-state">
+    <mat-icon>search_off</mat-icon>
+    <h2>No results found</h2>
+    <p>Try adjusting your search query or using a different search mode</p>
+  </div>
+
+  <!-- Search Results -->
+  <div *ngIf="hasResults()" class="results">
+    <mat-card
+      *ngFor="let result of results()"
+      class="result-card"
+      (click)="onResultClick(result)">
+      <mat-card-header>
+        <mat-card-title>{{ result.title }}</mat-card-title>
+        <mat-card-subtitle>
+          <mat-chip [color]="getScoreColor(result.score)">
+            {{ getScorePercentage(result.score) }} match
+          </mat-chip>
+          <span class="search-type">{{ result.searchType }}</span>
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <p class="snippet" [innerHTML]="result.snippet"></p>
+
+        <div class="metadata">
+          <span class="date">
+            <mat-icon>calendar_today</mat-icon>
+            {{ result.createdAt | date:'short' }}
+          </span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

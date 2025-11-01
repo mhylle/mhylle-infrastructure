@@ -23,6 +23,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/notes/note-detail/note-detail.component').then(m => m.NoteDetailComponent)
   },
   {
+    path: 'search',
+    loadComponent: () => import('./features/search/search.component').then(m => m.SearchComponent)
+  },
+  {
     path: 'tasks',
     loadComponent: () => import('./features/tasks/task-list/task-list.component').then(m => m.TaskListComponent)
   }
