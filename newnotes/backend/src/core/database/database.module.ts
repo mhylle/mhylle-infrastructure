@@ -16,6 +16,7 @@ import { Note, Task } from '@shared/entities';
         password: configService.get('database.password'),
         database: configService.get('database.database'),
         entities: [Note, Task],
+        autoLoadEntities: true, // Automatically load entities from forFeature()
         synchronize: configService.get('environment') === 'development',
         logging: configService.get('environment') === 'development',
       }),

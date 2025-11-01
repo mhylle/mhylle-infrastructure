@@ -66,17 +66,24 @@ export class SearchService {
     minScore: number = 0.0,
   ): Promise<SearchResultDto[]> {
     try {
+      this.logger.log(`Starting semantic search for query: "${query}"`);
+
       // Generate embedding for query
       const queryEmbedding = await this.embeddingsService.generateEmbedding(
         query,
       );
+      this.logger.log(`Generated embedding with ${queryEmbedding.length} dimensions`);
+
+      // Format embedding as a string for pgvector
+      // PostgreSQL requires vector format: '[0.1, 0.2, 0.3]'
+      const embeddingString = `[${queryEmbedding.join(',')}]`;
+      this.logger.log(`Formatted embedding string (length: ${embeddingString.length})`);
 
       // Perform vector similarity search using pgvector
       const results = await this.dataSource.query(
         `
         SELECT
           n.id,
-          n.title,
           n.content,
           SUBSTRING(n.content, 1, 200) as snippet,
           1 - (ne.embedding <=> $1::vector) as score,
@@ -89,8 +96,10 @@ export class SearchService {
         ORDER BY ne.embedding <=> $1::vector
         LIMIT $3
       `,
-        [queryEmbedding, minScore, limit],
+        [embeddingString, minScore, limit],
       );
+
+      this.logger.log(`Found ${results.length} results`);
 
       return results.map((r) => ({
         ...r,
@@ -116,22 +125,21 @@ export class SearchService {
         `
         SELECT
           n.id,
-          n.title,
           n.content,
           ts_headline('english', n.content, plainto_tsquery('english', $1),
             'MaxWords=50, MinWords=25') as snippet,
           ts_rank(
-            to_tsvector('english', n.title || ' ' || n.content),
+            to_tsvector('english', n.content),
             plainto_tsquery('english', $1)
           ) as score,
           n.created_at as "createdAt",
           n.updated_at as "updatedAt"
         FROM notes n
         WHERE
-          to_tsvector('english', n.title || ' ' || n.content) @@
+          to_tsvector('english', n.content) @@
           plainto_tsquery('english', $1)
           AND ts_rank(
-            to_tsvector('english', n.title || ' ' || n.content),
+            to_tsvector('english', n.content),
             plainto_tsquery('english', $1)
           ) >= $2
         ORDER BY score DESC
