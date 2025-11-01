@@ -1,0 +1,36 @@
+<div class="chat-input-container">
+  <div class="input-wrapper">
+    <mat-form-field appearance="outline" class="message-field">
+      <mat-label>Type your message...</mat-label>
+      <textarea
+        #messageInput
+        matInput
+        cdkTextareaAutosize
+        cdkAutosizeMinRows="1"
+        cdkAutosizeMaxRows="8"
+        [(ngModel)]="message"
+        (keydown)="onKeyDown($event)"
+        (input)="onInput($event)"
+        [disabled]="disabled()"
+        placeholder="Ask me anything about your notes..."
+        class="message-textarea">
+      </textarea>
+    </mat-form-field>
+
+    <button
+      mat-fab
+      color="primary"
+      class="send-button"
+      [disabled]="!canSend"
+      (click)="onSendMessage()"
+      matTooltip="Send message (Enter)"
+      matTooltipPosition="above">
+      <mat-icon>send</mat-icon>
+    </button>
+  </div>
+
+  <div class="input-hint">
+    <mat-icon>info</mat-icon>
+    <span>Press <strong>Enter</strong> to send, <strong>Shift + Enter</strong> for new line</span>
+  </div>
+</div>

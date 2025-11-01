@@ -8,6 +8,7 @@ import { LLMModule } from '@features/llm-service/llm.module';
 import { TasksModule } from '@features/tasks/tasks.module';
 import { EmbeddingsModule } from '@features/embeddings/embeddings.module';
 import { SearchModule } from '@features/search/search.module';
+import { ChatModule } from '@features/chat/chat.module';
 import configuration from '@core/config/configuration';
 
 @Module({
@@ -24,6 +25,7 @@ import configuration from '@core/config/configuration';
     TasksModule,
     EmbeddingsModule,
     SearchModule,
+    ChatModule,
   ],
 })
 export class AppModule {}

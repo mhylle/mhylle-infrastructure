@@ -1,0 +1,118 @@
+.chat-container {
+  height: calc(100vh - 64px); // Subtract toolbar height
+  width: 100%;
+  overflow: hidden;
+}
+
+.drawer-container {
+  height: 100%;
+  width: 100%;
+}
+
+.sessions-drawer {
+  width: 280px;
+  border-right: 1px solid #e0e0e0;
+  background-color: #f5f5f5;
+}
+
+.chat-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.chat-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.messages-area {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0; // Important for flex scroll
+}
+
+.input-area {
+  flex-shrink: 0;
+}
+
+.no-session-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 48px 24px;
+  text-align: center;
+  color: #757575;
+  background-color: #fafafa;
+
+  mat-icon {
+    font-size: 120px;
+    width: 120px;
+    height: 120px;
+    margin-bottom: 24px;
+    color: #2196f3;
+    opacity: 0.3;
+  }
+
+  h2 {
+    font-size: 28px;
+    font-weight: 500;
+    margin: 0 0 16px 0;
+    color: #424242;
+  }
+
+  p {
+    font-size: 16px;
+    max-width: 500px;
+    line-height: 1.6;
+    margin: 0;
+    opacity: 0.8;
+  }
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .chat-container {
+    height: calc(100vh - 56px); // Smaller mobile toolbar
+  }
+
+  .sessions-drawer {
+    width: 240px;
+  }
+
+  .no-session-state {
+    padding: 32px 16px;
+
+    mat-icon {
+      font-size: 80px;
+      width: 80px;
+      height: 80px;
+    }
+
+    h2 {
+      font-size: 22px;
+    }
+
+    p {
+      font-size: 14px;
+    }
+  }
+}
+
+// Snackbar styles (global)
+::ng-deep {
+  .success-snackbar {
+    background-color: #4caf50;
+    color: white;
+  }
+
+  .error-snackbar {
+    background-color: #f44336;
+    color: white;
+  }
+}

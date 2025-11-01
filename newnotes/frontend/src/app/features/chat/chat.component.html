@@ -1,0 +1,46 @@
+<div class="chat-container">
+  <mat-drawer-container class="drawer-container">
+    <!-- Sessions Sidebar -->
+    <mat-drawer
+      mode="side"
+      opened
+      class="sessions-drawer">
+      <app-session-list
+        [sessions]="sessions()"
+        [currentSessionId]="currentSessionId()"
+        (sessionSelected)="onSelectSession($event)"
+        (newSession)="onNewSession()"
+        (sessionDeleted)="onDeleteSession($event)">
+      </app-session-list>
+    </mat-drawer>
+
+    <!-- Main Chat Area -->
+    <mat-drawer-content class="chat-content">
+      @if (currentSessionId()) {
+        <div class="chat-main">
+          <!-- Messages Area -->
+          <div class="messages-area">
+            <app-message-list
+              [messages]="messages()"
+              [isLoading]="isStreaming()">
+            </app-message-list>
+          </div>
+
+          <!-- Input Area -->
+          <div class="input-area">
+            <app-chat-input
+              [disabled]="isStreaming()"
+              (messageSent)="onSendMessage($event)">
+            </app-chat-input>
+          </div>
+        </div>
+      } @else {
+        <div class="no-session-state">
+          <mat-icon>forum</mat-icon>
+          <h2>Welcome to AI Chat</h2>
+          <p>Select a session from the sidebar or create a new one to start chatting about your notes.</p>
+        </div>
+      }
+    </mat-drawer-content>
+  </mat-drawer-container>
+</div>

@@ -29,5 +29,9 @@ export const routes: Routes = [
   {
     path: 'tasks',
     loadComponent: () => import('./features/tasks/task-list/task-list.component').then(m => m.TaskListComponent)
+  },
+  {
+    path: 'chat',
+    loadComponent: () => import('./features/chat/chat.component').then(m => m.ChatComponent)
   }
 ];
