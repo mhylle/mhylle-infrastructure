@@ -7,7 +7,7 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { Note } from '../../notes/entities/note.entity';
+import { Note } from '@shared/entities/note.entity';
 
 @Entity('note_embeddings')
 @Index(['noteId', 'model'], { unique: true })
