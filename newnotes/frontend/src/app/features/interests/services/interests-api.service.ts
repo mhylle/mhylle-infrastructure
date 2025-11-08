@@ -15,7 +15,7 @@ export class InterestsApiService {
 
   constructor(private http: HttpClient) {}
 
-  getInterests(minConfidence: number = 0.7): Observable<Interest[]> {
+  getInterests(minConfidence: number = 0.6): Observable<Interest[]> {
     return this.http.get<Interest[]>(`${this.baseUrl}?minConfidence=${minConfidence}`);
   }
 
