@@ -11,7 +11,7 @@ export default () => ({
   ollama: {
     baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
     defaultModel: process.env.OLLAMA_DEFAULT_MODEL || 'deepseek-r1:32b',
-    timeout: parseInt(process.env.OLLAMA_TIMEOUT || '60000', 10),
+    timeout: parseInt(process.env.OLLAMA_TIMEOUT || '180000', 10),
   },
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
