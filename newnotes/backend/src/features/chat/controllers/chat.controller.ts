@@ -3,22 +3,39 @@ import {
   Get,
   Post,
   Delete,
+  Patch,
   Body,
   Param,
+  Query,
   Res,
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ChatService } from '../services/chat.service';
 import { RAGService } from '../services/rag.service';
+import { ChatTaskDetectionService } from '../services/chat-task-detection.service';
+import { ChatTaskDuplicationService } from '../services/chat-task-duplication.service';
 import { CreateSessionDto } from '../dto/create-session.dto';
 import { SendMessageDto } from '../dto/send-message.dto';
 import {
   ChatSessionResponseDto,
   ChatMessageResponseDto,
 } from '../dto/chat-response.dto';
+import {
+  CheckDuplicatesQueryDto,
+  DuplicateCheckResultDto,
+  MergeTaskDto,
+  MergeTaskResultDto,
+  IgnoreTaskResultDto,
+} from '../dto/task-deduplication.dto';
+import {
+  ConvertDetectedTaskDto,
+  ConvertedTaskResponseDto,
+} from '../dto/convert-detected-task.dto';
 
+@ApiTags('chat')
 @Controller('chat')
 export class ChatController {
   private readonly logger = new Logger(ChatController.name);
@@ -26,6 +43,8 @@ export class ChatController {
   constructor(
     private readonly chatService: ChatService,
     private readonly ragService: RAGService,
+    private readonly chatTaskDetectionService: ChatTaskDetectionService,
+    private readonly chatTaskDuplicationService: ChatTaskDuplicationService,
   ) {}
 
   @Post('sessions')
@@ -164,6 +183,387 @@ export class ChatController {
       response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         error: error.message || 'Failed to process message',
       });
+    }
+  }
+
+  // ========== Task Detection Endpoints ==========
+
+  @Post('messages/:messageId/detect-tasks')
+  async detectTasksFromMessage(@Param('messageId') messageId: string) {
+    this.logger.log(`Detecting tasks from message ${messageId}`);
+
+    try {
+      // Get the message content
+      const message = await this.chatService.findMessageById(messageId);
+
+      if (!message) {
+        return {
+          error: 'Message not found',
+          statusCode: HttpStatus.NOT_FOUND,
+        };
+      }
+
+      // Detect tasks from the message content
+      const result =
+        await this.chatTaskDetectionService.detectTasksFromChatMessage(
+          messageId,
+          message.content,
+        );
+
+      return {
+        success: true,
+        tasks: result.tasks,
+        processingTimeMs: result.processingTimeMs,
+        totalDetected: result.totalDetected,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to detect tasks from message ${messageId}: ${error.message}`,
+        error.stack,
+      );
+      return {
+        error: error.message || 'Failed to detect tasks',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
+
+  @Get('detected-tasks/active')
+  async getActiveDetectedTasks() {
+    this.logger.log('Getting active detected tasks');
+
+    try {
+      const tasks =
+        await this.chatTaskDetectionService.getActiveDetectedTasks();
+
+      return {
+        success: true,
+        tasks,
+        count: tasks.length,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to get active tasks: ${error.message}`,
+        error.stack,
+      );
+      return {
+        error: error.message || 'Failed to get active tasks',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
+
+  @Get('messages/:messageId/detected-tasks')
+  async getDetectedTasksForMessage(@Param('messageId') messageId: string) {
+    this.logger.log(`Getting detected tasks for message ${messageId}`);
+
+    try {
+      const tasks =
+        await this.chatTaskDetectionService.getDetectedTasksForMessage(
+          messageId,
+        );
+
+      return {
+        success: true,
+        tasks,
+        count: tasks.length,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to get tasks for message ${messageId}: ${error.message}`,
+        error.stack,
+      );
+      return {
+        error: error.message || 'Failed to get tasks for message',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
+
+  @Delete('detected-tasks/:taskId')
+  async deleteDetectedTask(@Param('taskId') taskId: string) {
+    this.logger.log(`Deleting task ${taskId}`);
+
+    try {
+      const task = await this.chatTaskDetectionService.deleteTask(taskId);
+
+      return {
+        success: true,
+        task,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to delete task ${taskId}: ${error.message}`,
+        error.stack,
+      );
+      return {
+        error: error.message || 'Failed to delete task',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
+
+  // ========== Task Deduplication Endpoints ==========
+
+  @Post('detected-tasks/:id/check-duplicates')
+  @ApiOperation({
+    summary: 'Manually trigger duplicate check for a detected task',
+    description:
+      'Checks for similar/duplicate tasks using embedding cosine similarity. ' +
+      'Automatic checking happens in background, use this to force re-check or check manually.',
+  })
+  @ApiParam({ name: 'id', type: String, description: 'Detected task UUID' })
+  @ApiQuery({
+    name: 'threshold',
+    required: false,
+    type: Number,
+    description: 'Minimum similarity score (0.0-1.0, default: 0.8)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Maximum number of results (default: 5)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Duplicate check completed successfully',
+    type: DuplicateCheckResultDto,
+  })
+  @ApiResponse({ status: 404, description: 'Detected task not found' })
+  async checkDuplicates(
+    @Param('id') detectedTaskId: string,
+    @Query() query: CheckDuplicatesQueryDto,
+  ): Promise<DuplicateCheckResultDto> {
+    const startTime = Date.now();
+    this.logger.log(`Checking duplicates for detected task ${detectedTaskId}`);
+
+    try {
+      const threshold = query.threshold ?? 0.8;
+      const limit = query.limit ?? 5;
+
+      const similarTasks =
+        await this.chatTaskDuplicationService.checkForDuplicates(
+          detectedTaskId,
+          threshold,
+          limit,
+        );
+
+      const processingTime = Date.now() - startTime;
+
+      return {
+        success: true,
+        hasDuplicates: similarTasks.length > 0,
+        count: similarTasks.length,
+        similarTasks,
+        processingTimeMs: processingTime,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to check duplicates for task ${detectedTaskId}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  @Get('detected-tasks/:id/similar')
+  @ApiOperation({
+    summary: 'Get similar tasks for a detected task',
+    description:
+      'Returns cached similar tasks from previous duplicate check. ' +
+      'If duplicate check has not been completed, returns error.',
+  })
+  @ApiParam({ name: 'id', type: String, description: 'Detected task UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Similar tasks retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        detectedTask: { type: 'object' },
+        hasDuplicates: { type: 'boolean' },
+        similarTasks: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              taskId: { type: 'string' },
+              similarity: { type: 'number' },
+              title: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Detected task not found' })
+  @ApiResponse({
+    status: 400,
+    description: 'Duplicate check not yet completed',
+  })
+  async getSimilarTasks(@Param('id') detectedTaskId: string) {
+    this.logger.log(`Getting similar tasks for detected task ${detectedTaskId}`);
+
+    try {
+      const detectedTask =
+        await this.chatTaskDuplicationService.getSimilarTasks(detectedTaskId);
+
+      return {
+        success: true,
+        detectedTask: {
+          id: detectedTask.id,
+          title: detectedTask.title,
+          description: detectedTask.description,
+          duplicateCheckCompleted: detectedTask.duplicateCheckCompleted,
+          hasDuplicates: detectedTask.hasDuplicates,
+        },
+        hasDuplicates: detectedTask.hasDuplicates,
+        similarTasks: detectedTask.similarTaskIds || [],
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to get similar tasks for ${detectedTaskId}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  @Post('detected-tasks/:id/merge')
+  @ApiOperation({
+    summary: 'Merge detected task with existing task',
+    description:
+      'Marks the detected task as deleted and optionally updates the existing task. ' +
+      'Does not create a new task - the existing task remains.',
+  })
+  @ApiParam({ name: 'id', type: String, description: 'Detected task UUID' })
+  @ApiBody({ type: MergeTaskDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Task merged successfully',
+    type: MergeTaskResultDto,
+  })
+  @ApiResponse({ status: 404, description: 'Task not found' })
+  async mergeTask(
+    @Param('id') detectedTaskId: string,
+    @Body() dto: MergeTaskDto,
+  ): Promise<MergeTaskResultDto> {
+    this.logger.log(
+      `Merging detected task ${detectedTaskId} with existing task ${dto.existingTaskId}`,
+    );
+
+    try {
+      const mergedTask =
+        await this.chatTaskDuplicationService.mergeWithExistingTask(
+          detectedTaskId,
+          dto.existingTaskId,
+        );
+
+      return {
+        success: true,
+        task: mergedTask,
+        mergedDetectedTaskId: detectedTaskId,
+        message: 'Detected task merged with existing task successfully',
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to merge tasks: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  @Post('detected-tasks/:id/ignore')
+  @ApiOperation({
+    summary: 'Ignore detected task as duplicate',
+    description:
+      'Marks the detected task as deleted without creating a new task. ' +
+      'Use when user confirms the task is a duplicate and should not be kept.',
+  })
+  @ApiParam({ name: 'id', type: String, description: 'Detected task UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Task ignored successfully',
+    type: IgnoreTaskResultDto,
+  })
+  @ApiResponse({ status: 404, description: 'Detected task not found' })
+  async ignoreTask(
+    @Param('id') detectedTaskId: string,
+  ): Promise<IgnoreTaskResultDto> {
+    this.logger.log(`Ignoring detected task ${detectedTaskId} as duplicate`);
+
+    try {
+      await this.chatTaskDuplicationService.ignoreAsDuplicate(detectedTaskId);
+
+      return {
+        success: true,
+        detectedTaskId,
+        message: 'Detected task marked as duplicate and ignored',
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to ignore task ${detectedTaskId}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  @Post('detected-tasks/:id/create-task')
+  @ApiOperation({
+    summary: 'Convert detected task to main task',
+    description:
+      'Creates a main task from a detected task. ' +
+      'The detected task will be marked as converted (deleted status). ' +
+      'Optionally associate with a note or create as a subtask.',
+  })
+  @ApiParam({ name: 'id', type: String, description: 'Detected task UUID' })
+  @ApiBody({
+    type: ConvertDetectedTaskDto,
+    required: false,
+    description: 'Optional note ID or parent task ID',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Task created successfully',
+    type: ConvertedTaskResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Detected task not found' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid task status or parent task not found',
+  })
+  async convertDetectedTaskToMainTask(
+    @Param('id') detectedTaskId: string,
+    @Body() dto?: ConvertDetectedTaskDto,
+  ): Promise<ConvertedTaskResponseDto> {
+    this.logger.log(
+      `Converting detected task ${detectedTaskId} to main task`,
+    );
+
+    try {
+      const createdTask =
+        await this.chatTaskDetectionService.convertDetectedTaskToMainTask(
+          detectedTaskId,
+          dto?.noteId,
+          dto?.parentTaskId,
+        );
+
+      return {
+        success: true,
+        task: createdTask,
+        detectedTaskId,
+        message: 'Detected task successfully converted to main task',
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to convert detected task ${detectedTaskId}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
     }
   }
 }

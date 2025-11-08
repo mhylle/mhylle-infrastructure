@@ -1,0 +1,120 @@
+<div class="task-panel" [class.collapsed]="isPanelCollapsed()">
+  <!-- Panel Header -->
+  <div class="panel-header">
+    <div class="header-content">
+      <mat-icon>task_alt</mat-icon>
+      <h3>Detected Tasks</h3>
+      <span class="task-count" *ngIf="tasks().length > 0">{{ tasks().length }}</span>
+    </div>
+    <button
+      mat-icon-button
+      class="toggle-button"
+      (click)="togglePanel()"
+      [matTooltip]="isPanelCollapsed() ? 'Expand panel' : 'Collapse panel'">
+      <mat-icon>{{ isPanelCollapsed() ? 'chevron_left' : 'chevron_right' }}</mat-icon>
+    </button>
+  </div>
+
+  <!-- Panel Content -->
+  <div class="panel-content" *ngIf="!isPanelCollapsed()">
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading()">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading tasks...</p>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state" *ngIf="error() && !isLoading()">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ error() }}</p>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading() && !error() && tasks().length === 0">
+      <mat-icon>check_circle_outline</mat-icon>
+      <p>No tasks detected yet</p>
+      <small>Tasks will appear here when detected from chat messages</small>
+    </div>
+
+    <!-- Task List -->
+    <div class="task-list" *ngIf="!isLoading() && !error() && tasks().length > 0">
+      <div *ngFor="let task of tasks()" class="task-item">
+        <!-- Duplicate Notification -->
+        <app-duplicate-notification
+          *ngIf="getDuplicateCheck(task.id)"
+          [duplicateCheck]="getDuplicateCheck(task.id)"
+          [taskTitle]="task.title"
+          [isChecking]="isCheckingDuplicates"
+          (viewSimilar)="handleViewSimilar($event)"
+          (dismiss)="handleDismiss($event)">
+        </app-duplicate-notification>
+
+        <!-- Task Card -->
+        <mat-card
+          class="task-card"
+          [class]="getPriorityClass(task.priority)">
+
+          <!-- Task Header -->
+          <div class="task-header">
+            <div class="task-priority">
+              <mat-chip
+                [color]="getPriorityColor(task.priority)"
+                selected>
+                {{ task.priority }}
+              </mat-chip>
+            </div>
+            <div class="header-actions">
+              <button
+                mat-icon-button
+                class="delete-button"
+                (click)="onDeleteTask(task, $event)"
+                matTooltip="Delete task"
+                [disabled]="isConverting(task.id)">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <!-- Task Content -->
+          <mat-card-content>
+            <h4 class="task-title">{{ task.title }}</h4>
+
+            <p class="task-description" *ngIf="task.description">
+              {{ task.description }}
+            </p>
+
+            <!-- Task Metadata -->
+            <div class="task-metadata">
+              <!-- Due Date -->
+              <div class="metadata-item" *ngIf="task.dueDate">
+                <mat-icon>event</mat-icon>
+                <span>{{ formatDate(task.dueDate) }}</span>
+              </div>
+
+              <!-- Confidence -->
+              <div class="metadata-item confidence">
+                <mat-icon>insights</mat-icon>
+                <span>{{ getConfidencePercentage(task.confidence) }}% confidence</span>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="task-actions">
+              <button
+                mat-raised-button
+                color="primary"
+                class="convert-button"
+                (click)="onConvertTask(task, $event)"
+                [disabled]="isConverting(task.id)"
+                matTooltip="Add this task to your main task list">
+                <mat-icon *ngIf="!isConverting(task.id)">add_task</mat-icon>
+                <mat-spinner *ngIf="isConverting(task.id)" diameter="20"></mat-spinner>
+                <span>{{ isConverting(task.id) ? 'Adding...' : 'Add to Tasks' }}</span>
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+</div>
