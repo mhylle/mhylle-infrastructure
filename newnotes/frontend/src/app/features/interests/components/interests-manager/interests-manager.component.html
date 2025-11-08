@@ -1,0 +1,295 @@
+<div class="interests-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>interests</mat-icon>
+        My Interests & Subscriptions
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Tab-based Layout -->
+      <mat-tab-group animationDuration="300ms" class="interests-tabs">
+
+        <!-- Tab 1: My Interests -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">favorite</mat-icon>
+            My Interests
+          </ng-template>
+
+          <!-- Loading State -->
+          <div *ngIf="loading()" class="loading-state">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Loading interests...</p>
+          </div>
+
+          <!-- Error State -->
+          <div *ngIf="error()" class="error-state">
+            <mat-icon color="warn">error_outline</mat-icon>
+            <p>{{ error() }}</p>
+            <button mat-raised-button color="primary" (click)="loadData()">
+              <mat-icon>refresh</mat-icon>
+              Retry
+            </button>
+          </div>
+
+          <!-- Content -->
+          <div *ngIf="!loading() && !error()" class="tab-content">
+            <!-- Auto-detected Interests with Recommendations -->
+            <section class="interests-section">
+              <h3>
+                <mat-icon>auto_awesome</mat-icon>
+                Auto-detected Interests
+              </h3>
+
+              <div *ngIf="autoDetected().length === 0" class="empty-state">
+                <mat-icon>lightbulb_outline</mat-icon>
+                <p>No interests detected yet. Create some notes to get started!</p>
+              </div>
+
+              <!-- Expansion Panels for each interest -->
+              <mat-accordion *ngIf="autoDetected().length > 0" class="interests-accordion">
+                <mat-expansion-panel *ngFor="let interest of autoDetected()"
+                                      class="interest-panel">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title class="interest-title">
+                      <span class="topic">{{ interest.topic }}</span>
+                      <span class="confidence"
+                            [ngClass]="getConfidenceClass(interest.confidence)"
+                            [matTooltip]="'Confidence: ' + (interest.confidence | percent)">
+                        {{ interest.confidence | percent }}
+                      </span>
+                      <span class="evidence"
+                            [matTooltip]="'Based on ' + interest.evidenceCount + ' ' + interest.sourceType">
+                        ({{ interest.evidenceCount }})
+                      </span>
+                    </mat-panel-title>
+                    <mat-panel-description class="interest-actions">
+                      <button mat-icon-button
+                              color="primary"
+                              (click)="confirm(interest); $event.stopPropagation()"
+                              matTooltip="Subscribe to this topic">
+                        <mat-icon>check_circle</mat-icon>
+                      </button>
+                      <button mat-icon-button
+                              (click)="ignore(interest); $event.stopPropagation()"
+                              matTooltip="Ignore this interest">
+                        <mat-icon>cancel</mat-icon>
+                      </button>
+                      <button mat-icon-button
+                              (click)="toggleRecommendations(interest.id); $event.stopPropagation()"
+                              matTooltip="View recommendations"
+                              color="accent">
+                        <mat-icon>recommend</mat-icon>
+                      </button>
+                    </mat-panel-description>
+                  </mat-expansion-panel-header>
+
+                  <!-- Recommendations for this interest -->
+                  <div class="recommendations-content">
+                    <!-- Loading State -->
+                    <div *ngIf="isRecommendationsLoading(interest.id)" class="recommendations-loading">
+                      <mat-spinner diameter="30"></mat-spinner>
+                      <p>Loading recommendations...</p>
+                    </div>
+
+                    <!-- Error State -->
+                    <div *ngIf="getRecommendationsError(interest.id)" class="recommendations-error">
+                      <mat-icon color="warn">error_outline</mat-icon>
+                      <p>{{ getRecommendationsError(interest.id) }}</p>
+                      <button mat-button
+                              color="primary"
+                              (click)="loadRecommendations(interest.id)">
+                        <mat-icon>refresh</mat-icon>
+                        Retry
+                      </button>
+                    </div>
+
+                    <!-- Recommendations Grid -->
+                    <div *ngIf="!isRecommendationsLoading(interest.id) &&
+                                !getRecommendationsError(interest.id) &&
+                                getRecommendations(interest.id).length > 0"
+                         class="recommendations-grid">
+                      <app-recommendation-card
+                        *ngFor="let rec of getRecommendations(interest.id)"
+                        [recommendation]="getRecommendationWithTotalScore(rec)"
+                        [showSignals]="true"
+                        (subscribe)="onSubscribeToRecommendation(rec.topic)">
+                      </app-recommendation-card>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div *ngIf="!isRecommendationsLoading(interest.id) &&
+                                !getRecommendationsError(interest.id) &&
+                                getRecommendations(interest.id).length === 0"
+                         class="recommendations-empty">
+                      <mat-icon>info_outline</mat-icon>
+                      <p>No recommendations available for this interest yet.</p>
+                    </div>
+                  </div>
+                </mat-expansion-panel>
+              </mat-accordion>
+            </section>
+
+            <!-- Add Custom Topic -->
+            <section class="add-topic-section">
+              <h3>
+                <mat-icon>add_circle</mat-icon>
+                Add Custom Topic
+              </h3>
+
+              <div class="add-topic-form">
+                <mat-form-field appearance="outline" class="topic-input">
+                  <mat-label>Topic name</mat-label>
+                  <input matInput
+                         [(ngModel)]="newTopic"
+                         placeholder="e.g., Machine Learning, Cooking, Travel"
+                         (keyup.enter)="addTopic()">
+                  <mat-icon matPrefix>topic</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="frequency-input">
+                  <mat-label>Frequency</mat-label>
+                  <mat-select [(ngModel)]="newFrequency">
+                    <mat-option *ngFor="let freq of frequencies" [value]="freq.value">
+                      {{ freq.label }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <button mat-raised-button
+                        color="primary"
+                        (click)="addTopic()"
+                        [disabled]="!newTopic.trim()">
+                  <mat-icon>add</mat-icon>
+                  Add Topic
+                </button>
+              </div>
+            </section>
+          </div>
+        </mat-tab>
+
+        <!-- Tab 2: Hierarchy -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">account_tree</mat-icon>
+            Hierarchy
+          </ng-template>
+
+          <div class="tab-content hierarchy-tab">
+            <!-- Loading State -->
+            <div *ngIf="hierarchyLoading()" class="loading-state">
+              <mat-spinner diameter="40"></mat-spinner>
+              <p>Loading hierarchy...</p>
+            </div>
+
+            <!-- Error State -->
+            <div *ngIf="hierarchyError()" class="error-state">
+              <mat-icon color="warn">error_outline</mat-icon>
+              <p>{{ hierarchyError() }}</p>
+              <button mat-raised-button color="primary" (click)="loadHierarchy()">
+                <mat-icon>refresh</mat-icon>
+                Retry
+              </button>
+            </div>
+
+            <!-- Hierarchy Tree -->
+            <div *ngIf="!hierarchyLoading() && !hierarchyError() && hierarchy()">
+              <div class="hierarchy-header">
+                <h3>
+                  <mat-icon>account_tree</mat-icon>
+                  Interest Relationships
+                </h3>
+                <p class="hierarchy-description">
+                  Explore how your interests are related. Click on an interest to see details and recommendations.
+                </p>
+              </div>
+
+              <app-hierarchy-tree
+                [hierarchy]="hierarchy()"
+                [selectedInterestId]="selectedInterestId()"
+                (interestSelected)="onInterestSelected($event)">
+              </app-hierarchy-tree>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Tab 3: Subscriptions -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">subscriptions</mat-icon>
+            Subscriptions
+          </ng-template>
+
+          <div class="tab-content subscriptions-tab">
+            <!-- Loading State -->
+            <div *ngIf="loading()" class="loading-state">
+              <mat-spinner diameter="40"></mat-spinner>
+              <p>Loading subscriptions...</p>
+            </div>
+
+            <!-- Error State -->
+            <div *ngIf="error()" class="error-state">
+              <mat-icon color="warn">error_outline</mat-icon>
+              <p>{{ error() }}</p>
+              <button mat-raised-button color="primary" (click)="loadData()">
+                <mat-icon>refresh</mat-icon>
+                Retry
+              </button>
+            </div>
+
+            <!-- Subscriptions Content -->
+            <div *ngIf="!loading() && !error()">
+              <section class="subscriptions-section">
+                <h3>
+                  <mat-icon>subscriptions</mat-icon>
+                  Active Subscriptions
+                </h3>
+
+                <div *ngIf="subscriptions().length === 0" class="empty-state">
+                  <mat-icon>notifications_none</mat-icon>
+                  <p>No subscriptions yet. Confirm interests or add custom topics in the My Interests tab.</p>
+                </div>
+
+                <mat-list *ngIf="subscriptions().length > 0">
+                  <mat-list-item *ngFor="let sub of subscriptions()">
+                    <span matListItemTitle class="subscription-topic">
+                      {{ sub.topic }}
+                      <mat-icon *ngIf="sub.isAutoDetected"
+                                class="auto-badge"
+                                matTooltip="Auto-detected">auto_awesome</mat-icon>
+                    </span>
+
+                    <span matListItemLine class="subscription-details">
+                      <mat-select [(ngModel)]="sub.notificationFrequency"
+                                  (selectionChange)="updateFrequency(sub, $event.value)"
+                                  class="frequency-select">
+                        <mat-option *ngFor="let freq of frequencies" [value]="freq.value">
+                          {{ freq.label }}
+                        </mat-option>
+                      </mat-select>
+
+                      <mat-slide-toggle [checked]="sub.enabled"
+                                        (change)="toggleEnabled(sub)"
+                                        color="primary"
+                                        matTooltip="Enable/disable notifications">
+                      </mat-slide-toggle>
+
+                      <button mat-icon-button
+                              (click)="remove(sub)"
+                              matTooltip="Remove subscription"
+                              color="warn">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </span>
+                  </mat-list-item>
+                </mat-list>
+              </section>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card-content>
+  </mat-card>
+</div>

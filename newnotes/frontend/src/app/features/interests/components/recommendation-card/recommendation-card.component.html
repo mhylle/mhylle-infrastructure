@@ -1,0 +1,60 @@
+<mat-card class="recommendation-card">
+  <mat-card-header>
+    <mat-card-title class="recommendation-title">
+      <span class="topic-name">{{ recommendation.topic }}</span>
+      <span class="score-badge" [ngClass]="getScoreColorClass()">
+        {{ recommendation.totalScore }}%
+      </span>
+    </mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <!-- Overall Score Progress Bar -->
+    <div class="score-section">
+      <div class="score-label">Overall Score</div>
+      <mat-progress-bar
+        mode="determinate"
+        [value]="recommendation.totalScore"
+        [ngClass]="getScoreColorClass()"
+        class="main-progress-bar">
+      </mat-progress-bar>
+    </div>
+
+    <!-- Signal Breakdown -->
+    <div class="signals-section" *ngIf="showSignals">
+      <div class="signals-label">Signal Breakdown</div>
+      <div class="signals-grid">
+        <div class="signal-item" *ngFor="let signal of getSignalBreakdown()">
+          <div class="signal-header">
+            <mat-icon class="signal-icon">{{ signal.icon }}</mat-icon>
+            <span class="signal-name">{{ signal.name }}</span>
+            <span class="signal-value">{{ signal.value }}%</span>
+          </div>
+          <mat-progress-bar
+            mode="determinate"
+            [value]="signal.value"
+            [ngClass]="signal.color"
+            class="signal-progress-bar">
+          </mat-progress-bar>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reasoning -->
+    <div class="reasoning-section">
+      <div class="reasoning-label">Why this recommendation?</div>
+      <p class="reasoning-text">{{ recommendation.reasoning }}</p>
+    </div>
+  </mat-card-content>
+
+  <mat-card-actions>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="onSubscribe()"
+      class="subscribe-button">
+      <mat-icon>notifications_active</mat-icon>
+      Subscribe
+    </button>
+  </mat-card-actions>
+</mat-card>

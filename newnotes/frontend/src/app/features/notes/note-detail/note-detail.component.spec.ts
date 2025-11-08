@@ -8,7 +8,7 @@ import { NoteDetailComponent } from './note-detail.component';
 import { NotesApiService } from '../../../core/services/notes-api.service';
 import { TasksApiService } from '../../../core/services/tasks-api.service';
 import { Note } from '../../../core/models/note.model';
-import { Task, TaskStatus, TaskPriority } from '../../../core/models/task.model';
+import { Task, TaskStatus, TaskPriority, TaskSource } from '../../../core/models/task.model';
 
 describe('NoteDetailComponent', () => {
   let component: NoteDetailComponent;
@@ -39,6 +39,10 @@ describe('NoteDetailComponent', () => {
       description: 'Test description 1',
       priority: TaskPriority.HIGH,
       status: TaskStatus.PENDING,
+      source: 'manual' as TaskSource,
+      parent_task_id: null,
+      level: 0,
+      order_index: 0,
       created_at: '2025-10-31T10:00:00.000Z',
       updated_at: '2025-10-31T10:00:00.000Z'
     },
@@ -48,6 +52,10 @@ describe('NoteDetailComponent', () => {
       title: 'Test task 2',
       priority: TaskPriority.MEDIUM,
       status: TaskStatus.COMPLETED,
+      source: 'manual' as TaskSource,
+      parent_task_id: null,
+      level: 0,
+      order_index: 1,
       completed_at: '2025-10-31T12:00:00.000Z',
       created_at: '2025-10-31T10:00:00.000Z',
       updated_at: '2025-10-31T12:00:00.000Z'

@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { TaskListComponent } from './task-list.component';
 import { TasksApiService } from '../../../core/services/tasks-api.service';
 import { of, throwError } from 'rxjs';
-import { Task, TaskStatus, TaskPriority } from '../../../core/models/task.model';
+import { Task, TaskStatus, TaskPriority, TaskSource } from '../../../core/models/task.model';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
@@ -20,6 +20,10 @@ describe('TaskListComponent', () => {
       description: 'Description 1',
       priority: TaskPriority.HIGH,
       status: TaskStatus.PENDING,
+      source: 'manual' as TaskSource,
+      parent_task_id: null,
+      level: 0,
+      order_index: 0,
       due_date: '2025-11-01T00:00:00.000Z',
       created_at: '2025-10-31T10:00:00.000Z',
       updated_at: '2025-10-31T10:00:00.000Z'
@@ -31,6 +35,10 @@ describe('TaskListComponent', () => {
       description: 'Description 2',
       priority: TaskPriority.MEDIUM,
       status: TaskStatus.IN_PROGRESS,
+      source: 'manual' as TaskSource,
+      parent_task_id: null,
+      level: 0,
+      order_index: 1,
       due_date: '2025-11-02T00:00:00.000Z',
       created_at: '2025-10-31T11:00:00.000Z',
       updated_at: '2025-10-31T11:00:00.000Z'
@@ -42,6 +50,10 @@ describe('TaskListComponent', () => {
       description: 'Description 3',
       priority: TaskPriority.LOW,
       status: TaskStatus.COMPLETED,
+      source: 'manual' as TaskSource,
+      parent_task_id: null,
+      level: 0,
+      order_index: 2,
       due_date: '2025-11-03T00:00:00.000Z',
       completed_at: '2025-10-31T12:00:00.000Z',
       created_at: '2025-10-31T09:00:00.000Z',

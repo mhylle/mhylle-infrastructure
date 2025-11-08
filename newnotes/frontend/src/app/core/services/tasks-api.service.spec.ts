@@ -8,7 +8,8 @@ import {
   UpdateTaskStatusDto,
   TaskFilterParams,
   TaskStatus,
-  TaskPriority
+  TaskPriority,
+  TaskSource
 } from '../models/task.model';
 
 describe('TasksApiService', () => {
@@ -42,6 +43,10 @@ describe('TasksApiService', () => {
           title: 'Test task',
           priority: TaskPriority.MEDIUM,
           status: TaskStatus.PENDING,
+          source: 'manual' as TaskSource,
+          parent_task_id: null,
+          level: 0,
+          order_index: 0,
           created_at: '2025-01-01T00:00:00Z',
           updated_at: '2025-01-01T00:00:00Z'
         }
@@ -110,6 +115,10 @@ describe('TasksApiService', () => {
         description: 'Task description',
         priority: TaskPriority.HIGH,
         status: TaskStatus.IN_PROGRESS,
+        source: 'manual' as TaskSource,
+        parent_task_id: null,
+        level: 0,
+        order_index: 0,
         created_at: '2025-01-01T00:00:00Z',
         updated_at: '2025-01-01T00:00:00Z'
       };
@@ -147,6 +156,10 @@ describe('TasksApiService', () => {
           title: 'Task 1',
           priority: TaskPriority.MEDIUM,
           status: TaskStatus.PENDING,
+          source: 'manual' as TaskSource,
+          parent_task_id: null,
+          level: 0,
+          order_index: 0,
           created_at: '2025-01-01T00:00:00Z',
           updated_at: '2025-01-01T00:00:00Z'
         },
@@ -156,6 +169,10 @@ describe('TasksApiService', () => {
           title: 'Task 2',
           priority: TaskPriority.HIGH,
           status: TaskStatus.COMPLETED,
+          source: 'manual' as TaskSource,
+          parent_task_id: null,
+          level: 0,
+          order_index: 1,
           created_at: '2025-01-02T00:00:00Z',
           updated_at: '2025-01-02T00:00:00Z'
         }
@@ -189,6 +206,10 @@ describe('TasksApiService', () => {
         description: 'Task description',
         priority: TaskPriority.HIGH,
         status: TaskStatus.PENDING,
+        source: 'manual' as TaskSource,
+        parent_task_id: null,
+        level: 0,
+        order_index: 0,
         created_at: '2025-01-01T00:00:00Z',
         updated_at: '2025-01-01T00:00:00Z'
       };
@@ -238,6 +259,10 @@ describe('TasksApiService', () => {
         description: 'Updated description',
         priority: TaskPriority.URGENT,
         status: TaskStatus.PENDING,
+        source: 'manual' as TaskSource,
+        parent_task_id: null,
+        level: 0,
+        order_index: 0,
         created_at: '2025-01-01T00:00:00Z',
         updated_at: '2025-01-02T00:00:00Z'
       };
@@ -264,6 +289,10 @@ describe('TasksApiService', () => {
         title: 'Only title updated',
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.PENDING,
+        source: 'manual' as TaskSource,
+        parent_task_id: null,
+        level: 0,
+        order_index: 0,
         created_at: '2025-01-01T00:00:00Z',
         updated_at: '2025-01-02T00:00:00Z'
       };
@@ -290,6 +319,10 @@ describe('TasksApiService', () => {
         title: 'Test task',
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.COMPLETED,
+        source: 'manual' as TaskSource,
+        parent_task_id: null,
+        level: 0,
+        order_index: 0,
         completed_at: '2025-01-03T00:00:00Z',
         created_at: '2025-01-01T00:00:00Z',
         updated_at: '2025-01-03T00:00:00Z'
@@ -317,6 +350,10 @@ describe('TasksApiService', () => {
         title: 'Test task',
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.IN_PROGRESS,
+        source: 'manual' as TaskSource,
+        parent_task_id: null,
+        level: 0,
+        order_index: 0,
         created_at: '2025-01-01T00:00:00Z',
         updated_at: '2025-01-02T00:00:00Z'
       };

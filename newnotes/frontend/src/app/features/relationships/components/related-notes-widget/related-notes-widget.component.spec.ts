@@ -81,7 +81,7 @@ describe('RelatedNotesWidgetComponent', () => {
   });
 
   it('should refresh relationships', async () => {
-    const mockRelations = [];
+    const mockRelations: any[] = [];
     mockRelationshipsService.getRelated.and.returnValue(of(mockRelations));
 
     await component.refresh();
