@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { IntentClassification } from '../types/intent.types';
+import { IntentClassification, RoutingRule } from '../types/intent.types';
 import { ROUTING_RULES } from '../config/routing-rules.config';
 
 @Injectable()
@@ -46,7 +46,7 @@ export class RuleBasedRouterService {
    * Calculate match score for a rule (0.0-1.0)
    * Returns 0 if no match, or a score indicating match quality
    */
-  private calculateMatchScore(message: string, rule: any): number {
+  private calculateMatchScore(message: string, rule: RoutingRule): number {
     // Check negative keywords first (disqualifying)
     if (rule.patterns.negativeKeywords) {
       for (const negativeKeyword of rule.patterns.negativeKeywords) {
