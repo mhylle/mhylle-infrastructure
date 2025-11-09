@@ -3,8 +3,7 @@
   overflow-y: auto;
   padding: 24px;
   background-color: #fafafa;
-  display: flex;
-  flex-direction: column;
+  width: 100%;
 }
 
 .empty-state {
@@ -56,7 +55,7 @@
     .message-card {
       background-color: #2196f3;
       color: white;
-      max-width: 70%;
+      max-width: min(800px, 75%);
 
       .message-icon {
         color: white;
@@ -74,7 +73,7 @@
 
     .message-card {
       background-color: white;
-      max-width: 80%;
+      max-width: min(1000px, 85%);
       border: 1px solid #e0e0e0;
     }
   }
@@ -402,6 +401,32 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+// Desktop large screens - wider content area
+@media (min-width: 1600px) {
+  .message {
+    &.user-message .message-card {
+      max-width: min(900px, 70%);
+    }
+
+    &.assistant-message .message-card {
+      max-width: min(1200px, 80%);
+    }
+  }
+}
+
+// Tablet
+@media (min-width: 769px) and (max-width: 1024px) {
+  .message {
+    &.user-message .message-card {
+      max-width: 75%;
+    }
+
+    &.assistant-message .message-card {
+      max-width: 85%;
+    }
   }
 }
 

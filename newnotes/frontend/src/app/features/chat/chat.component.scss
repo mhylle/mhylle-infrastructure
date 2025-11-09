@@ -1,5 +1,5 @@
 .chat-container {
-  height: calc(100vh - 64px); // Subtract toolbar height
+  height: 100%; // Parent already accounts for toolbar
   width: 100%;
   overflow: hidden;
 }
@@ -22,11 +22,20 @@
   overflow: hidden;
 }
 
+.chat-main-with-tasks {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
 .chat-main {
   display: flex;
   flex-direction: column;
+  flex: 1;
   height: 100%;
-  width: 100%;
+  min-width: 0; // Important for flex shrinking
+  overflow: hidden;
 }
 
 .messages-area {
@@ -75,7 +84,14 @@
   }
 }
 
-// Mobile responsive
+// Tablet and Mobile responsive
+@media (max-width: 1024px) {
+  .chat-main-with-tasks {
+    // On tablet, allow task panel to overlay
+    position: relative;
+  }
+}
+
 @media (max-width: 768px) {
   .chat-container {
     height: calc(100vh - 56px); // Smaller mobile toolbar
@@ -83,6 +99,13 @@
 
   .sessions-drawer {
     width: 240px;
+  }
+
+  .chat-main-with-tasks {
+    // On mobile, chat takes full width and task panel overlays
+    .chat-main {
+      width: 100%;
+    }
   }
 
   .no-session-state {
