@@ -11,6 +11,9 @@ import { EmbeddingsModule } from '@features/embeddings/embeddings.module';
 import { SearchModule } from '@features/search/search.module';
 import { ChatModule } from '@features/chat/chat.module';
 import { RelationshipsModule } from '@features/relationships/relationships.module';
+import { InterestsModule } from '@features/interests/interests.module';
+import { NewsModule } from '@features/news/news.module';
+import { OrchestratorModule } from './features/orchestrator/orchestrator.module';
 import configuration from '@core/config/configuration';
 
 @Module({
@@ -30,6 +33,9 @@ import configuration from '@core/config/configuration';
     SearchModule,
     ChatModule,
     RelationshipsModule,
+    InterestsModule,
+    NewsModule,
+    OrchestratorModule,
   ],
 })
 export class AppModule {}
