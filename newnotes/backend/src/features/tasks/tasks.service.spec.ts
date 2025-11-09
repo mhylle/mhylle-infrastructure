@@ -6,8 +6,10 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 import { TaskFilterDto } from './dto/task-filter.dto';
-import { Task } from '../../shared/entities/task.entity';
+import { Task, TaskSource } from '../../shared/entities/task.entity';
 import { TaskStatus, TaskPriority } from './dto/task.enums';
+import { RedisService } from '@core/redis/redis.service';
+import { TaskContextService } from './services/task-context.service';
 
 describe('TasksService', () => {
   let service: TasksService;
@@ -27,6 +29,12 @@ describe('TasksService', () => {
     llm_confidence: 0.95,
     metadata: { source: 'test' },
     note: null,
+    source: TaskSource.MANUAL,
+    parent_task_id: null,
+    parent_task: null,
+    level: 0,
+    order_index: 0,
+    children: [],
   };
 
   const mockTaskRepository = {
@@ -40,6 +48,16 @@ describe('TasksService', () => {
     createTasksForNote: jest.fn(),
   };
 
+  const mockRedisService = {
+    publish: jest.fn(),
+  };
+
+  const mockTaskContextService = {
+    createContext: jest.fn(),
+    findByTaskId: jest.fn(),
+    update: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -47,6 +65,14 @@ describe('TasksService', () => {
         {
           provide: TaskRepository,
           useValue: mockTaskRepository,
+        },
+        {
+          provide: RedisService,
+          useValue: mockRedisService,
+        },
+        {
+          provide: TaskContextService,
+          useValue: mockTaskContextService,
         },
       ],
     }).compile();
