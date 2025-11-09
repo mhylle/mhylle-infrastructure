@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { ChatMessage } from '../../models/chat-session.model';
+import { MarkdownPipe } from '../../pipes/markdown.pipe';
 
 @Component({
   selector: 'app-message-list',
@@ -16,7 +17,8 @@ import { ChatMessage } from '../../models/chat-session.model';
     MatChipsModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    RouterLink
+    RouterLink,
+    MarkdownPipe
   ],
   templateUrl: './message-list.component.html',
   styleUrl: './message-list.component.scss'

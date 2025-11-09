@@ -22,7 +22,11 @@
             </div>
 
             <div class="message-content">
-              {{ message.content }}
+              @if (message.role === 'user') {
+                {{ message.content }}
+              } @else {
+                <div class="markdown-content" [innerHTML]="message.content | markdown"></div>
+              }
             </div>
 
             <!-- Source Citations -->
