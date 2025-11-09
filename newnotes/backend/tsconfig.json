@@ -20,7 +20,8 @@
     "paths": {
       "@core/*": ["src/core/*"],
       "@features/*": ["src/features/*"],
-      "@shared/*": ["src/shared/*"]
+      "@shared/*": ["src/shared/*"],
+      "@test/*": ["src/test/*"]
     }
   }
 }
