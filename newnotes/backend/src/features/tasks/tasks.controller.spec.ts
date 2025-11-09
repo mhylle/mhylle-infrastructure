@@ -3,6 +3,11 @@ import { TasksController } from './tasks.controller';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto, UpdateTaskDto, UpdateTaskStatusDto, TaskFilterDto, TaskStatus, TaskPriority } from './dto';
 import { NotFoundException } from '@nestjs/common';
+import { TaskEmbeddingsService } from '@features/embeddings/services/task-embeddings.service';
+import { TaskRelationshipService } from '@features/relationships/services/task-relationship.service';
+import { SimilaritySearchService } from './services/similarity-search.service';
+import { TaskContextService } from './services/task-context.service';
+import { TaskHierarchyService } from './services/task-hierarchy.service';
 
 describe('TasksController', () => {
   let controller: TasksController;
@@ -33,6 +38,36 @@ describe('TasksController', () => {
     remove: jest.fn(),
   };
 
+  const mockTaskEmbeddingsService = {
+    generateEmbedding: jest.fn(),
+    getEmbedding: jest.fn(),
+  };
+
+  const mockTaskRelationshipService = {
+    createRelationship: jest.fn(),
+    getTaskRelationships: jest.fn(),
+    deleteRelationship: jest.fn(),
+  };
+
+  const mockSimilaritySearchService = {
+    findSimilarTasks: jest.fn(),
+  };
+
+  const mockTaskContextService = {
+    createTaskContext: jest.fn(),
+    getTaskContext: jest.fn(),
+    getTasksBySource: jest.fn(),
+  };
+
+  const mockTaskHierarchyService = {
+    createSubtask: jest.fn(),
+    getChildren: jest.fn(),
+    getHierarchyTree: jest.fn(),
+    getAncestors: jest.fn(),
+    getCompletionPercentage: jest.fn(),
+    moveTask: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [TasksController],
@@ -40,6 +75,26 @@ describe('TasksController', () => {
         {
           provide: TasksService,
           useValue: mockTasksService,
+        },
+        {
+          provide: TaskEmbeddingsService,
+          useValue: mockTaskEmbeddingsService,
+        },
+        {
+          provide: TaskRelationshipService,
+          useValue: mockTaskRelationshipService,
+        },
+        {
+          provide: SimilaritySearchService,
+          useValue: mockSimilaritySearchService,
+        },
+        {
+          provide: TaskContextService,
+          useValue: mockTaskContextService,
+        },
+        {
+          provide: TaskHierarchyService,
+          useValue: mockTaskHierarchyService,
         },
       ],
     }).compile();
@@ -191,7 +246,12 @@ describe('TasksController', () => {
       const result = await controller.create(createDto);
 
       expect(result).toEqual(newTask);
-      expect(service.create).toHaveBeenCalledWith(createDto);
+      expect(service.create).toHaveBeenCalledWith(
+        createDto,
+        'note',
+        'note-uuid-1',
+        undefined,
+      );
     });
 
     it('should create a task with minimal data', async () => {
@@ -211,7 +271,12 @@ describe('TasksController', () => {
       const result = await controller.create(createDto);
 
       expect(result).toEqual(newTask);
-      expect(service.create).toHaveBeenCalledWith(createDto);
+      expect(service.create).toHaveBeenCalledWith(
+        createDto,
+        'note',
+        'note-uuid-1',
+        undefined,
+      );
     });
 
     it('should create a task with metadata', async () => {
@@ -226,7 +291,12 @@ describe('TasksController', () => {
       const result = await controller.create(createDto);
 
       expect(result).toEqual(newTask);
-      expect(service.create).toHaveBeenCalledWith(createDto);
+      expect(service.create).toHaveBeenCalledWith(
+        createDto,
+        'note',
+        'note-uuid-1',
+        undefined,
+      );
     });
   });
 

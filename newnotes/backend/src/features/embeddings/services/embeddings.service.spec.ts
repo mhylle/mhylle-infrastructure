@@ -15,7 +15,7 @@ describe('EmbeddingsService', () => {
 
   const mockEmbeddingResponse: EmbeddingResponseDto = {
     embedding: mockEmbedding,
-    model: 'all-MiniLM-L6-v2',
+    model: 'dengcao/Qwen3-Embedding-8B:Q4_K_M',
     dimension: 384,
   };
 
@@ -66,7 +66,7 @@ describe('EmbeddingsService', () => {
         'http://embeddings-service:8001/api/embeddings/generate',
         {
           text: 'test text',
-          model: 'all-MiniLM-L6-v2',
+          model: 'dengcao/Qwen3-Embedding-8B:Q4_K_M',
         },
       );
     });
@@ -86,7 +86,7 @@ describe('EmbeddingsService', () => {
     it('should generate batch embeddings', async () => {
       const batchResponse = {
         embeddings: [mockEmbedding, mockEmbedding],
-        model: 'all-MiniLM-L6-v2',
+        model: 'dengcao/Qwen3-Embedding-8B:Q4_K_M',
         dimension: 384,
         count: 2,
       };
@@ -105,7 +105,7 @@ describe('EmbeddingsService', () => {
         'http://embeddings-service:8001/api/embeddings/generate/batch',
         {
           texts: ['text1', 'text2'],
-          model: 'all-MiniLM-L6-v2',
+          model: 'dengcao/Qwen3-Embedding-8B:Q4_K_M',
         },
       );
     });
@@ -124,7 +124,7 @@ describe('EmbeddingsService', () => {
       expect(noteEmbeddingRepository.upsert).toHaveBeenCalledWith(
         'note-id',
         mockEmbedding,
-        'all-MiniLM-L6-v2',
+        'dengcao/Qwen3-Embedding-8B:Q4_K_M',
       );
     });
 
@@ -159,7 +159,7 @@ describe('EmbeddingsService', () => {
         of({
           data: {
             status: 'healthy',
-            model: 'all-MiniLM-L6-v2',
+            model: 'dengcao/Qwen3-Embedding-8B:Q4_K_M',
             device: 'cuda',
             dimension: 384,
           },

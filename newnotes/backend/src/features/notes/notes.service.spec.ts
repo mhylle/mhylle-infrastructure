@@ -83,10 +83,18 @@ describe('NotesService', () => {
 
       // Verify event was published
       expect(mockRedisService.publish).toHaveBeenCalledWith(
-        'notes:created',
+        'note.created',
         expect.objectContaining({
           noteId: savedNote.id,
           content: savedNote.content,
+          rawContent: savedNote.raw_content,
+          source: savedNote.source,
+          timestamp: expect.any(Date),
+          metadata: expect.objectContaining({
+            userId: 'user-123',
+            createdAt: expect.any(Date),
+            tags: ['test'],
+          }),
         }),
       );
 
