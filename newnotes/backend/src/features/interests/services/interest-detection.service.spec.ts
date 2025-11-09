@@ -6,6 +6,8 @@ import { UserInterest } from '../entities/user-interest.entity';
 import { InterestEvidence } from '../entities/interest-evidence.entity';
 import { Note } from '../../../shared/entities/note.entity';
 import { LocalModelService } from '../../llm-service/services/local-model.service';
+import { InterestSimilarityService } from './interest-similarity.service';
+import { InterestHierarchyService } from './interest-hierarchy.service';
 
 describe('InterestDetectionService', () => {
   let service: InterestDetectionService;
@@ -40,6 +42,20 @@ describe('InterestDetectionService', () => {
     generateCompletion: jest.fn(),
   };
 
+  const mockSimilarityService = {
+    findSimilarInterests: jest.fn(),
+    calculateSimilarity: jest.fn(),
+    generateInterestEmbedding: jest.fn(),
+    autoMergeSimilarInterests: jest.fn(),
+  };
+
+  const mockHierarchyService = {
+    getHierarchy: jest.fn(),
+    getParent: jest.fn(),
+    getChildren: jest.fn(),
+    detectHierarchies: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -63,6 +79,14 @@ describe('InterestDetectionService', () => {
         {
           provide: LocalModelService,
           useValue: mockLocalModelService,
+        },
+        {
+          provide: InterestSimilarityService,
+          useValue: mockSimilarityService,
+        },
+        {
+          provide: InterestHierarchyService,
+          useValue: mockHierarchyService,
         },
       ],
     }).compile();
@@ -258,6 +282,10 @@ describe('InterestDetectionService', () => {
         { id: '2', title: 'Build NestJS API' },
       ];
 
+      const mockChatMessages = [
+        { id: '1', content: 'How do I use TypeScript?', role: 'user' },
+      ];
+
       const mockLLMResponse = {
         text: '[{"name": "TypeScript", "score": 0.9, "count": 2}, {"name": "NestJS", "score": 0.8, "count": 2}]',
         model: 'test-model',
@@ -265,7 +293,9 @@ describe('InterestDetectionService', () => {
       };
 
       mockNotesRepo.find.mockResolvedValue(mockNotes);
-      mockDataSource.query.mockResolvedValue(mockTasks);
+      mockDataSource.query
+        .mockResolvedValueOnce(mockTasks)
+        .mockResolvedValueOnce(mockChatMessages);
       mockLocalModelService.generateCompletion.mockResolvedValue(
         mockLLMResponse,
       );
@@ -279,8 +309,8 @@ describe('InterestDetectionService', () => {
       const result = await service.detectInterests();
 
       expect(mockNotesRepo.find).toHaveBeenCalled();
-      expect(mockDataSource.query).toHaveBeenCalled();
-      expect(mockLocalModelService.generateCompletion).toHaveBeenCalledTimes(2);
+      expect(mockDataSource.query).toHaveBeenCalledTimes(2);
+      expect(mockLocalModelService.generateCompletion).toHaveBeenCalledTimes(3);
       expect(result.length).toBeGreaterThan(0);
     });
 
