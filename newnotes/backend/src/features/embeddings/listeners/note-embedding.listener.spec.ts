@@ -91,6 +91,7 @@ describe('NoteEmbeddingListener', () => {
       const event: NoteCreatedEvent = {
         noteId: 'test-note-id',
         content: 'Fallback content',
+        rawContent: 'Fallback content',
         source: 'api',
         metadata: {
           userId: 'user-1',
@@ -126,6 +127,7 @@ describe('NoteEmbeddingListener', () => {
       const event: NoteCreatedEvent = {
         noteId: 'test-note-id',
         content: 'Test content',
+        rawContent: 'Test content',
         source: 'api',
         metadata: {
           userId: 'user-1',
